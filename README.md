@@ -1,7 +1,7 @@
-++C and GCZ transpiler: Precompilation additions to the C Programming Language
+++C and GCZ transpiler
 ===
 
-###Goal: Adding syntactic features to allow easier expression of ideas and lessen the verbosity of C source code
+###Syntactic features to allow easier expression of ideas and lessen the verbosity of C source code
 
 ##Features:
 * Automatic list/string concatenation and memory size checking/resizing
