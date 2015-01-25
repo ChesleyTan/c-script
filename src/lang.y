@@ -61,6 +61,17 @@ str_expr:
                                         free($3);
                                         $$ = s;
                                     }
+         | INTEGER '*' str_expr     {
+                                        char *s = (char *) malloc(sizeof(char) *
+                                            $1 * strlen($3) + 1);
+                                        int count = 1;
+                                        strcpy(s, $3);
+                                        while (count++ < $1) {
+                                            strcat(s, $3);
+                                        }
+                                        free($3);
+                                        $$ = s;
+                                    }
 %%
     /* ================ END RULES ================ */
 
