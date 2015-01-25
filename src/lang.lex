@@ -5,16 +5,16 @@
     #include <string.h>
     #include <sys/types.h>
 
-    #include "colors.h"
+    #include "utils.h"
     #include "lang.tab.h"
 
     #define ERRMSG_LENGTH 100
-    #define BUF_SIZE 100
 
     void yyerror(char *);
-    char buf[BUF_SIZE];
-    // TODO dynamic string size
-    size_t buf_index;
+    int buf_resize(size_t);
+    size_t buf_size = 0;
+    size_t buf_index = 0;
+    char *buf;
 %}
 
     /* Parse state for strings */
@@ -37,9 +37,21 @@
     /* =========================================== */
     /* ================ Strings ================== */
 \"              { BEGIN STRING_STATE; buf_index = 0; }
-<STRING_STATE>\\n   { buf[buf_index++] = '\n'; }
-<STRING_STATE>\\t   { buf[buf_index++] = '\t'; }
-<STRING_STATE>\\\"  { buf[buf_index++] = '\"'; }
+<STRING_STATE>\\n   {
+                        if (buf_resize(1) != -1) {
+                            buf[buf_index++] = '\n';
+                        }
+                    }
+<STRING_STATE>\\t   {
+                        if (buf_resize(1) != -1) {
+                            buf[buf_index++] = '\t';
+                        }
+                    }
+<STRING_STATE>\\\"  {
+                        if (buf_resize(1) != -1) {
+                            buf[buf_index++] = '\"';
+                        }
+                    }
 <STRING_STATE>\"    {
                         /* Null-terminate string */
                         buf[buf_index] = '\0';
@@ -49,15 +61,19 @@
                         print_debug("Found string '%s'", buf);
                         #endif
                         yylval.strval = strdup(buf);
+                        buf_index = 0;
                         return STRING;
                     }
 <STRING_STATE>\n    {
+                        /* Null-terminate string */
                         buf[buf_index] = '\0';
                         print_error("String not terminated: '%s'", buf);
                         exit(1);
                     }
 <STRING_STATE>.     {
-                        buf[buf_index++] = *yytext;
+                        if (buf_resize(1) != -1) {
+                            buf[buf_index++] = *yytext;
+                        }
                     }
     /* =========================================== */
     /* ================ Operators ================ */
@@ -79,5 +95,30 @@
     /* ================ SUBROUTINES ============== */
 int yywrap(void) {
     return 1;
+}
+int buf_resize(size_t size_change) {
+    /*
+        Resizes the buffer if necessary
+        Returns 0 on success; -1 on failure
+    */
+    if (buf_size == 0) {
+        if ((buf = (char *) malloc(2 * sizeof(char)))) {
+            buf_size = 2;
+        }
+    }
+    else if (buf_index + size_change > buf_size - 1) {
+        buf_size *= 2;
+        #ifdef DEBUG
+        print_debug("String buffer resized to %d", buf_size);
+        #endif
+        char *new_ptr;
+        if ((new_ptr = realloc(buf, buf_size))) {
+            buf = new_ptr;
+        }
+        else {
+            return -1;
+        }
+    }
+    return 0;
 }
     /* ============= END SUBROUTINES ============= */
