@@ -30,15 +30,25 @@
                 }
     /* =========================================== */
     /* ================ Integers ================= */
-(-)?[0-9]+          {
+(-)?[0-9]+      {
                     yylval.intval = atoi(yytext);
                     #ifdef DEBUG
-                    print_debug("Found integer: %d", atoi(yytext));
+                    print_debug("Found integer: %d", yylval.intval);
                     #endif
                     return INTEGER;
                 }
     /* =========================================== */
-    /* ================ Strings ================== */
+    /* ================= Floats ================== */
+(-)?([0-9]+(\.)[0-9]*|[0-9]*(\.)[0-9]+)     {
+                                                yylval.floatval = atof(yytext);
+                                                #ifdef DEBUG
+                                                print_debug("Found float: %f",
+                                                            yylval.floatval);
+                                                #endif
+                                                return FLOAT;
+                                            }
+    /* =========================================== */
+    /* ================= Strings ================= */
 \"              { BEGIN STRING_STATE; buf_index = 0; }
 <STRING_STATE>\\n   {
                         if (buf_resize(1) != -1) {

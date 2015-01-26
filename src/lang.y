@@ -1,5 +1,5 @@
     /* =============== DEFINITIONS ============= */
-%token INTEGER VARIABLE STRING
+%token INTEGER FLOAT VARIABLE STRING
     /* Left-associative operator precedence */
 %left '+' '-'
 %left '*' '%'
@@ -22,6 +22,7 @@
 %union {
     char *strval;
     int intval;
+    float floatval;
 }
 
 %type <strval> STRING
@@ -29,6 +30,8 @@
 %type <intval> VARIABLE
 %type <intval> expr
 %type <intval> INTEGER
+%type <floatval> FLOAT
+%type <floatval> float_expr
     /* ============= END DEFINITIONS ============= */
 
     /* ================== RULES ================== */
@@ -40,33 +43,34 @@ program:
 
 statement:
          | expr                 { printf("%d\n", $1); }
+         | float_expr           { printf("%f\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
          | VARIABLE '=' expr    { sym[$1] = $3; }
          ;
 expr:
-           INTEGER              { $$ = $1; }
-         | VARIABLE             { $$ = sym[$1]; }
-         | expr '+' expr        { $$ = $1 + $3; }
-         | expr '-' expr        { $$ = $1 - $3; }
-         | expr '*' expr        { $$ = $1 * $3; }
-         | expr '/' expr        {
-                                    if ($3 != 0)
-                                        $$ = $1 / $3;
-                                    else
-                                        $$ = 0;
-                                }
-         | expr '%' expr        {
-                                    if ($3 != 0)
-                                        $$ = $1 % $3;
-                                    else
-                                        $$ = 0;
-                                }
-         | expr '*''*' expr     { $$ = (int) powf($1, $4); }
-         | expr '^' expr        { $$ = $1 ^ $3; }
-         | expr '|' expr        { $$ = $1 | $3; }
-         | expr '>''>' expr     { $$ = $1 >> $4; }
-         | expr '<''<' expr     { $$ = $1 << $4; }
-         | '(' expr ')'         { $$ = $2; }
+           INTEGER                  { $$ = $1; }
+         | VARIABLE                 { $$ = sym[$1]; }
+         | expr '+' expr            { $$ = $1 + $3; }
+         | expr '-' expr            { $$ = $1 - $3; }
+         | expr '*' expr            { $$ = $1 * $3; }
+         | expr '/' expr            {
+                                        if ($3 != 0)
+                                            $$ = $1 / $3;
+                                        else
+                                            $$ = 0;
+                                    }
+         | expr '%' expr            {
+                                        if ($3 != 0)
+                                            $$ = $1 % $3;
+                                        else
+                                            $$ = 0;
+                                    }
+         | expr '*''*' expr         { $$ = (int) powf($1, $4); }
+         | expr '^' expr            { $$ = $1 ^ $3; }
+         | expr '|' expr            { $$ = $1 | $3; }
+         | expr '>''>' expr         { $$ = $1 >> $4; }
+         | expr '<''<' expr         { $$ = $1 << $4; }
+         | '(' expr ')'             { $$ = $2; }
          ;
 str_expr:
            STRING                   { $$ = $1; }
@@ -116,6 +120,40 @@ str_expr:
                                         $$ = s;
                                     }
          | '(' str_expr ')'         { $$ = $2; }
+float_expr:
+           FLOAT                            { $$ = $1; }
+         | float_expr '+' float_expr        { $$ = $1 + $3; }
+         | float_expr '+' expr              { $$ = $1 + $3; }
+         | expr '+' float_expr              { $$ = $1 + $3; }
+         | float_expr '-' float_expr        { $$ = $1 - $3; }
+         | float_expr '-' expr              { $$ = $1 - $3; }
+         | expr '-' float_expr              { $$ = $1 - $3; }
+         | float_expr '*' float_expr        { $$ = $1 * $3; }
+         | float_expr '*' expr              { $$ = $1 * $3; }
+         | expr '*' float_expr              { $$ = $1 * $3; }
+         | float_expr '/' float_expr        {
+                                                if ($3 != 0)
+                                                    $$ = $1 / $3;
+                                                else
+                                                    $$ = 0;
+                                            }
+         | float_expr '/' expr              {
+                                                if ($3 != 0)
+                                                    $$ = $1 / $3;
+                                                else
+                                                    $$ = 0;
+                                            }
+         | expr '/' float_expr              {
+                                                if ($3 != 0)
+                                                    $$ = $1 / $3;
+                                                else
+                                                    $$ = 0;
+                                            }
+         | float_expr '*''*' float_expr     { $$ = powf($1, $4); }
+         | float_expr '*''*' expr           { $$ = powf($1, $4); }
+         | expr '*''*' float_expr           { $$ = powf($1, $4); }
+         | '(' float_expr ')'               { $$ = $2; }
+         ;
 %%
     /* ================ END RULES ================ */
 
