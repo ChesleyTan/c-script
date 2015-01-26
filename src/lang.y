@@ -63,23 +63,37 @@ str_expr:
                                         $$ = s;
                                     }
          | expr '*' str_expr     {
-                                        char *s = (char *) malloc(sizeof(char) *
-                                            $1 * strlen($3) + 1);
-                                        int count = 1;
-                                        strcpy(s, $3);
-                                        while (count++ < $1) {
-                                            strcat(s, $3);
+                                        char *s;
+                                        if ($1 > 0) {
+                                            s = (char *) malloc(sizeof(char) *
+                                                $1 * strlen($3) + 1);
+                                            int count = 1;
+                                            strcpy(s, $3);
+                                            while (count++ < $1) {
+                                                strcat(s, $3);
+                                            }
+                                        }
+                                        else {
+                                            s = (char *) malloc(sizeof(char));
+                                            s[0] = '\0';
                                         }
                                         free($3);
                                         $$ = s;
                                     }
          | str_expr '*' expr     {
-                                        char *s = (char *) malloc(sizeof(char) *
-                                            $3 * strlen($1) + 1);
-                                        int count = 1;
-                                        strcpy(s, $1);
-                                        while (count++ < $3) {
-                                            strcat(s, $1);
+                                        char *s;
+                                        if ($3 > 0) {
+                                            s = (char *) malloc(sizeof(char) *
+                                                $3 * strlen($1) + 1);
+                                            int count = 1;
+                                            strcpy(s, $1);
+                                            while (count++ < $3) {
+                                                strcat(s, $1);
+                                            }
+                                        }
+                                        else {
+                                            s = (char *) malloc(sizeof(char));
+                                            s[0] = '\0';
                                         }
                                         free($1);
                                         $$ = s;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
@@ -18,26 +20,6 @@ static const char *fg_blue_24 = "38;5;24m";
 static const char *fg_blue_39 = "38;5;39m";
 static const char *fg_white = "38;5;15m";
 
-static void print_error(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    fprintf(stderr, "%s%s[ERROR] %s", bold_prefix, fg_red_196, reset);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-}
-
-static void print_debug(const char *format, ...) {
-    va_list args;
-    va_start(args, format);
-    fprintf(stderr, "%s%s[DEBUG] %s", bold_prefix, fg_yellow_220, reset);
-    vfprintf(stderr, format, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-}
-
-static void print_errno(const char *message) {
-    if (errno) {
-            fprintf(stderr, "%s%s%s%s %s%s->%s %s%s%s%s\n", bold_prefix, fg_red_196, message, reset, bold_prefix, fg_white, reset, bold_prefix, fg_red_160, strerror(errno), reset);
-    }
-}
+void print_error(const char *format, ...);
+void print_debug(const char *format, ...);
+void print_errno(const char *message);

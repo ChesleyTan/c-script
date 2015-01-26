@@ -1,11 +1,12 @@
-DEBUG="-DDEBUG -g"
+DEBUG=-DDEBUG -g
 WARNINGS_QUIET=-Wall -Wno-unused-variable -Wno-unused-function
 WARNINGS_ALL=-Wall
 WARNINGS=$(WARNINGS_QUIET)
+C_FILES=lex.yy.c lang.tab.c utils.c
 all:
 	bison -d lang.y
 	flex lang.lex
-	gcc $(DEBUG) $(WARNINGS) lex.yy.c lang.tab.c -o lang
+	gcc $(DEBUG) $(WARNINGS) $(C_FILES) -o lang
 	@make clean
 clean:
 	@rm lang.tab.*
