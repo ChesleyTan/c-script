@@ -141,6 +141,30 @@ str_expr:
                                             $$ = $1;
                                         }
                                     }
+         | str_expr '[' expr ']'    {
+                                        char *s = (char *) calloc(2,
+                                            sizeof(char));
+                                        /* 
+                                         * Use int, rather than size_t for
+                                         * correct signed to signed comparison
+                                         */
+                                        int len = strlen($1);
+                                        if (len > $3) {
+                                            if ($3 < 0) {
+                                                s[0] = $1[
+                                                    (len + ($3 % len)) % len];
+                                            }
+                                            else {
+                                                s[0] = $1[$3];
+                                            }
+                                        }
+                                        else {
+                                            s[0] = $1[$3 % len];
+                                        }
+                                        s[1] = '\0';
+                                        $$ = s;
+                                        free($1);
+                                    }
          | '(' str_expr ')'         { $$ = $2; }
 float_expr:
            FLOAT                            { $$ = $1; }
