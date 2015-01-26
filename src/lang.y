@@ -8,6 +8,7 @@
     #include <stdlib.h>
     #include <errno.h>
     #include <string.h>
+    #include <math.h>
 
     #include "utils.h"
 
@@ -48,7 +49,18 @@ expr:
          | expr '+' expr        { $$ = $1 + $3; }
          | expr '-' expr        { $$ = $1 - $3; }
          | expr '*' expr        { $$ = $1 * $3; }
-         | expr '/' expr        { $$ = $1 / $3; }
+         | expr '/' expr        {
+                                    if ($3 != 0)
+                                        $$ = $1 / $3;
+                                    else
+                                        $$ = 0;
+                                }
+         | expr '%' expr        {
+                                    if ($3 != 0)
+                                        $$ = $1 % $3;
+                                    else
+                                        $$ = 0;
+                                }
          | '(' expr ')'         { $$ = $2; }
          ;
 str_expr:
