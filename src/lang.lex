@@ -19,6 +19,8 @@
 
     /* Parse state for strings */
 %x STRING_STATE 
+    /* Parse state for comments */
+%x COMMENT
     /* ============= END DEFINITIONS ============= */
 
     /* ================== RULES ================== */
@@ -49,7 +51,7 @@
                                             }
     /* =========================================== */
     /* ================= Strings ================= */
-\"              { BEGIN STRING_STATE; buf_index = 0; }
+\"              { BEGIN(STRING_STATE); buf_index = 0; }
 <STRING_STATE>\\n   {
                         if (buf_resize(1) != -1) {
                             buf[buf_index++] = '\n';
@@ -69,7 +71,7 @@
                         /* Null-terminate string */
                         buf[buf_index] = '\0';
                         /* Restore initial state */
-                        BEGIN 0;
+                        BEGIN (INITIAL);
                         #ifdef DEBUG
                         print_debug("Found string '%s'", buf);
                         #endif
@@ -93,6 +95,12 @@
 [-+/*%()=\n^<>|]    {
                         return *yytext;
                     }
+    /* =========================================== */
+    /* ============= Ignore comments ============= */
+"/*"                            { BEGIN(COMMENT); }
+    /* Non-greedy regex */
+<COMMENT>(("*"[^/])?|[^*])*     ;
+<COMMENT>"*/"                   { BEGIN(INITIAL); }
     /* =========================================== */
     /* ============= Ignore whitespace =========== */
 [ \t]           ;
