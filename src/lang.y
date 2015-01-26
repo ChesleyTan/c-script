@@ -61,6 +61,11 @@ expr:
                                     else
                                         $$ = 0;
                                 }
+         | expr '*''*' expr     { $$ = (int) powf($1, $4); }
+         | expr '^' expr        { $$ = $1 ^ $3; }
+         | expr '|' expr        { $$ = $1 | $3; }
+         | expr '>''>' expr     { $$ = $1 >> $4; }
+         | expr '<''<' expr     { $$ = $1 << $4; }
          | '(' expr ')'         { $$ = $2; }
          ;
 str_expr:
