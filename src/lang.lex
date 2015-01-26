@@ -30,7 +30,7 @@
                 }
     /* =========================================== */
     /* ================ Integers ================= */
-[0-9]+          {
+(-)?[0-9]+          {
                     yylval.intval = atoi(yytext);
                     #ifdef DEBUG
                     print_debug("Found integer: %d", atoi(yytext));
