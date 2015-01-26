@@ -15,6 +15,7 @@
     int yylex(void);
     int sym[26];
     extern FILE * yyin;
+    extern int yylineno;
 %}
 
 %union {
@@ -37,7 +38,7 @@ program:
         ;
 
 statement:
-           expr                 { printf("%d\n", $1); }
+         | expr                 { printf("%d\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
          | VARIABLE '=' expr    { sym[$1] = $3; }
          ;
@@ -61,7 +62,7 @@ str_expr:
                                         free($3);
                                         $$ = s;
                                     }
-         | INTEGER '*' str_expr     {
+         | expr '*' str_expr     {
                                         char *s = (char *) malloc(sizeof(char) *
                                             $1 * strlen($3) + 1);
                                         int count = 1;
@@ -72,7 +73,7 @@ str_expr:
                                         free($3);
                                         $$ = s;
                                     }
-         | str_expr '*' INTEGER     {
+         | str_expr '*' expr     {
                                         char *s = (char *) malloc(sizeof(char) *
                                             $3 * strlen($1) + 1);
                                         int count = 1;
@@ -89,7 +90,7 @@ str_expr:
 
     /* ================ SUBROUTINES ============== */
 void yyerror(char *s) {
-    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, "Line %d: %s\n", yylineno, s);
 }
 
 int main(int argc, char*argv[]) {
