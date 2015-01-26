@@ -119,6 +119,28 @@ str_expr:
                                         free($1);
                                         $$ = s;
                                     }
+         | str_expr '-' str_expr     {
+                                        char *match = strstr($1, $3);
+                                        if (match != NULL) {
+                                            size_t match_len = strlen($3);
+                                            /* Allocate memory for result */
+                                            char *s = (char *)
+                                                malloc(sizeof(char) *
+                                                (strlen($1) - match_len + 1));
+                                            /* Copy substring before match */
+                                            strncpy(s, $1, match - $1);
+                                            /* Copy substring after match */
+                                            strcpy(s+(int)(match - $1),
+                                                match + match_len);
+                                            free($1);
+                                            free($3);
+                                            $$ = s;
+                                        }
+                                        else {
+                                            free($3);
+                                            $$ = $1;
+                                        }
+                                    }
          | '(' str_expr ')'         { $$ = $2; }
 float_expr:
            FLOAT                            { $$ = $1; }
