@@ -68,22 +68,27 @@
                         }
                     }
 <STRING_STATE>\"    {
-                        /* Null-terminate string */
-                        buf[buf_index] = '\0';
-                        /* Restore initial state */
-                        BEGIN (INITIAL);
-                        #ifdef DEBUG
-                        print_debug("Found string '%s'", buf);
-                        #endif
-                        yylval.strval = strdup(buf);
-                        buf_index = 0;
-                        return STRING;
+                        if (buf_resize(0) != -1) {
+                            /* Null-terminate string */
+                            buf[buf_index] = '\0';
+                            /* Restore initial state */
+                            BEGIN (INITIAL);
+                            #ifdef DEBUG
+                            print_debug("Found string '%s'", buf);
+                            #endif
+                            yylval.strval = strdup(buf);
+                            buf_index = 0;
+                            return STRING;
+                        }
                     }
 <STRING_STATE>\n    {
-                        /* Null-terminate string */
-                        buf[buf_index] = '\0';
-                        print_error("String not terminated: '%s'", buf);
-                        exit(1);
+                        if (buf_resize(0) != 1) {
+                            /* Null-terminate string */
+                            buf[buf_index] = '\0';
+                            print_error("String not terminated: '%s'", buf);
+                            /* Restore initial state */
+                            BEGIN (INITIAL);
+                        }
                     }
 <STRING_STATE>.     {
                         if (buf_resize(1) != -1) {
@@ -92,7 +97,7 @@
                     }
     /* =========================================== */
     /* ================ Operators ================ */
-[-+/*%()=\n^<>|\[\]]    {
+[-+/*%()=\n^<>|\[\]:]   {
                             return *yytext;
                         }
     /* =========================================== */

@@ -54,16 +54,20 @@ expr:
          | expr '-' expr            { $$ = $1 - $3; }
          | expr '*' expr            { $$ = $1 * $3; }
          | expr '/' expr            {
-                                        if ($3 != 0)
-                                            $$ = $1 / $3;
-                                        else
-                                            $$ = 0;
+
+            if ($3 != 0)
+                $$ = $1 / $3;
+            else
+                $$ = 0;
+
                                     }
          | expr '%' expr            {
-                                        if ($3 != 0)
-                                            $$ = $1 % $3;
-                                        else
-                                            $$ = 0;
+
+            if ($3 != 0)
+                $$ = $1 % $3;
+            else
+                $$ = 0;
+
                                     }
          | expr '*''*' expr         { $$ = (int) powf($1, $4); }
          | expr '^' expr            { $$ = $1 ^ $3; }
@@ -75,96 +79,164 @@ expr:
 str_expr:
            STRING                   { $$ = $1; }
          | str_expr '+' str_expr    {
-                                        char *s = (char *) malloc(sizeof(char) *
-                                            (strlen($1) + strlen($3) + 1));
-                                        strcpy(s, $1);
-                                        strcat(s, $3);
-                                        free($1);
-                                        free($3);
-                                        $$ = s;
+
+            char *s = (char *) malloc(sizeof(char) *
+                (strlen($1) + strlen($3) + 1));
+            strcpy(s, $1);
+            strcat(s, $3);
+            free($1);
+            free($3);
+            $$ = s;
+
                                     }
-         | expr '*' str_expr     {
-                                        char *s;
-                                        if ($1 > 0) {
-                                            s = (char *) malloc(sizeof(char) *
-                                                $1 * strlen($3) + 1);
-                                            int count = 1;
-                                            strcpy(s, $3);
-                                            while (count++ < $1) {
-                                                strcat(s, $3);
-                                            }
-                                        }
-                                        else {
-                                            s = (char *) malloc(sizeof(char));
-                                            s[0] = '\0';
-                                        }
-                                        free($3);
-                                        $$ = s;
-                                    }
-         | str_expr '*' expr     {
-                                        char *s;
-                                        if ($3 > 0) {
-                                            s = (char *) malloc(sizeof(char) *
-                                                $3 * strlen($1) + 1);
-                                            int count = 1;
-                                            strcpy(s, $1);
-                                            while (count++ < $3) {
-                                                strcat(s, $1);
-                                            }
-                                        }
-                                        else {
-                                            s = (char *) malloc(sizeof(char));
-                                            s[0] = '\0';
-                                        }
-                                        free($1);
-                                        $$ = s;
-                                    }
+         | expr '*' str_expr    {
+
+            char *s;
+            if ($1 > 0) {
+                s = (char *) malloc(sizeof(char) * $1 * strlen($3) + 1);
+                int count = 1;
+                strcpy(s, $3);
+                while (count++ < $1) {
+                    strcat(s, $3);
+                }
+            }
+            else {
+                s = (char *) malloc(sizeof(char));
+                s[0] = '\0';
+            }
+            free($3);
+            $$ = s;
+
+                                }
+         | str_expr '*' expr    {
+
+            char *s;
+            if ($3 > 0) {
+                s = (char *) malloc(sizeof(char) * $3 * strlen($1) + 1);
+                int count = 1;
+                strcpy(s, $1);
+                while (count++ < $3) {
+                    strcat(s, $1);
+                }
+            }
+            else {
+                s = (char *) malloc(sizeof(char));
+                s[0] = '\0';
+            }
+            free($1);
+            $$ = s;
+
+                                }
          | str_expr '-' str_expr     {
-                                        char *match = strstr($1, $3);
-                                        if (match != NULL) {
-                                            size_t match_len = strlen($3);
-                                            /* Allocate memory for result */
-                                            char *s = (char *)
-                                                malloc(sizeof(char) *
-                                                (strlen($1) - match_len + 1));
-                                            /* Copy substring before match */
-                                            strncpy(s, $1, match - $1);
-                                            /* Copy substring after match */
-                                            strcpy(s+(int)(match - $1),
-                                                match + match_len);
-                                            free($1);
-                                            free($3);
-                                            $$ = s;
-                                        }
-                                        else {
-                                            free($3);
-                                            $$ = $1;
-                                        }
+
+            char *match = strstr($1, $3);
+            if (match != NULL) {
+                size_t match_len = strlen($3);
+                /* Allocate memory for result */
+                char *s = (char *) malloc(sizeof(char) *
+                    (strlen($1) - match_len + 1));
+                /* Copy substring before match */
+                strncpy(s, $1, match - $1);
+                /* Copy substring after match */
+                strcpy(s+(int)(match - $1), match + match_len);
+                free($1);
+                free($3);
+                $$ = s;
+            }
+            else {
+                free($3);
+                $$ = $1;
+            }
+
                                     }
          | str_expr '[' expr ']'    {
-                                        char *s = (char *) calloc(2,
-                                            sizeof(char));
-                                        /* 
-                                         * Use int, rather than size_t for
-                                         * correct signed to signed comparison
-                                         */
-                                        int len = strlen($1);
-                                        if (len > $3) {
-                                            if ($3 < 0) {
-                                                s[0] = $1[
-                                                    (len + ($3 % len)) % len];
-                                            }
-                                            else {
-                                                s[0] = $1[$3];
-                                            }
-                                        }
-                                        else {
-                                            s[0] = $1[$3 % len];
-                                        }
-                                        s[1] = '\0';
-                                        $$ = s;
-                                        free($1);
+
+            /*
+                * Use int, rather than size_t for
+                * correct signed to signed comparison
+                */
+            int len = strlen($1);
+            if (len > 0) {
+                char *s = (char *) calloc(2, sizeof(char));
+                int index = $3;
+                index %= len;
+                if (index < 0) {
+                    s[0] = $1[len + index];
+                }
+                else {
+                    s[0] = $1[index];
+                }
+                free($1);
+                s[1] = '\0';
+                $$ = s;
+            }
+            else {
+                $$ = $1;
+            }
+
                                     }
+         | str_expr '[' expr ':' expr ']'   {
+
+            /*
+            * Use int, rather than size_t for
+            * correct signed to signed comparison
+            */
+            /*
+                * Exclusive of second bound if
+                * ascending; Inclusive otherwise
+                */
+            int len = strlen($1);
+            if (len > 0) {
+                int bound1 = $3 % len;
+                int bound2 = $5 % (len + 1);
+                char isAscending = 0;
+                if (bound1 < 0) {
+                    bound1 = len + bound1;
+                }
+                if (bound2 < 0) {
+                    bound2 = len + bound2;
+                }
+                if (bound1 < bound2) {
+                    bound2 -= 1;
+                    isAscending = 1;
+                }
+                #ifdef DEBUG
+                printf("Substring from %d to %d", bound1, bound2);
+                if (!isAscending && bound1 == bound2) {
+                    printf(" (Exclusive)");
+                }
+                else {
+                    printf(" (Inclusive)");
+                }
+                #endif
+                printf("\n");
+                char *s = (char *) malloc(sizeof(char) *
+                    (abs(bound1 - bound2) + 2));
+                int s_index = 0;
+                if (bound1 < bound2 || (isAscending && bound1 == bound2)) {
+                    s[s_index++] = $1[bound1++];
+                    while (bound1 < bound2 ||
+                    (isAscending == 1 && bound1 == bound2)) {
+                        s[s_index++] =
+                        $1[bound1++];
+                    }
+                }
+                else if (bound1 > bound2) {
+                    s[s_index++] = $1[bound1--];
+                    while (bound1 >= bound2) {
+                        s[s_index++] =
+                        $1[bound1--];
+                    }
+                }
+                s[s_index++] = '\0';
+                free($1);
+                $$ = s;
+            }
+            else {
+                $$ = $1;
+            }
+
+                                            }
          | '(' str_expr ')'         { $$ = $2; }
 float_expr:
            FLOAT                            { $$ = $1; }
@@ -178,22 +250,28 @@ float_expr:
          | float_expr '*' expr              { $$ = $1 * $3; }
          | expr '*' float_expr              { $$ = $1 * $3; }
          | float_expr '/' float_expr        {
-                                                if ($3 != 0)
-                                                    $$ = $1 / $3;
-                                                else
-                                                    $$ = 0;
+
+            if ($3 != 0)
+                $$ = $1 / $3;
+            else
+                $$ = 0;
+
                                             }
          | float_expr '/' expr              {
-                                                if ($3 != 0)
-                                                    $$ = $1 / $3;
-                                                else
-                                                    $$ = 0;
+
+            if ($3 != 0)
+                $$ = $1 / $3;
+            else
+                $$ = 0;
+
                                             }
          | expr '/' float_expr              {
-                                                if ($3 != 0)
-                                                    $$ = $1 / $3;
-                                                else
-                                                    $$ = 0;
+
+            if ($3 != 0)
+                $$ = $1 / $3;
+            else
+                $$ = 0;
+
                                             }
          | float_expr '*''*' float_expr     { $$ = powf($1, $4); }
          | float_expr '*''*' expr           { $$ = powf($1, $4); }
