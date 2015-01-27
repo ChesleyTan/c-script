@@ -3,7 +3,7 @@ WARNINGS_QUIET=-Wall -Wno-unused-variable -Wno-unused-function
 WARNINGS_ALL=-Wall
 WARNINGS=$(WARNINGS_QUIET)
 C_FILES=lex.yy.c lang.tab.c utils.c
-LIBS=-lm
+LIBS=-lm -lreadline
 all:
 	bison -d lang.y
 	flex lang.lex
@@ -13,4 +13,4 @@ clean:
 	@rm lang.tab.*
 	@rm lex.yy.c
 valgrind: all
-	valgrind --leak-check=full --track-origins=yes ./lang
+	valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --track-fds=yes ./lang

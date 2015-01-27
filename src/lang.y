@@ -6,17 +6,30 @@
 %{
     #include <stdio.h>
     #include <stdlib.h>
+    #include <unistd.h>
+    #include <signal.h>
     #include <errno.h>
+    #include <sys/wait.h>
     #include <string.h>
     #include <math.h>
+    #include <readline/readline.h>
+    #include <readline/history.h>
 
     #include "utils.h"
+
+    #define INPUT_BUF_SIZE 2048
+    #define EOF_EXIT_CODE 10
+    #define SIGINT_EXIT_CODE 11
 
     void yyerror(char *);
     int yylex(void);
     int sym[26];
     extern FILE * yyin;
     extern int yylineno;
+    char keep_alive = 1;
+    char input[INPUT_BUF_SIZE];
+    int rl_child_pid;
+    const char *prompt = ">> ";
 %}
 
 %union {
@@ -182,9 +195,9 @@ str_expr:
             * correct signed to signed comparison
             */
             /*
-                * Exclusive of second bound if
-                * ascending; Inclusive otherwise
-                */
+            * Exclusive of second bound if
+            * ascending; Inclusive otherwise
+            */
             int len = strlen($1);
             if (len > 0) {
                 int bound1 = $3 % len;
@@ -201,15 +214,15 @@ str_expr:
                     isAscending = 1;
                 }
                 #ifdef DEBUG
-                printf("Substring from %d to %d", bound1, bound2);
                 if (!isAscending && bound1 == bound2) {
-                    printf(" (Exclusive)");
+                    print_debug("Substring from %d to %d (Exclusive)",
+                        bound1, bound2);
                 }
                 else {
-                    printf(" (Inclusive)");
+                    print_debug("Substring from %d to %d (Inclusive)",
+                        bound1, bound2);
                 }
                 #endif
-                printf("\n");
                 char *s = (char *) malloc(sizeof(char) *
                     (abs(bound1 - bound2) + 2));
                 int s_index = 0;
@@ -282,18 +295,129 @@ float_expr:
     /* ================ END RULES ================ */
 
     /* ================ SUBROUTINES ============== */
+static void readline_sigint_handler() {
+    // Exit gracefully when killed with SIGINT
+    exit(SIGINT_EXIT_CODE);
+}
+
+static void sighandler(int signo) {
+    if (signo == SIGINT) {
+        if (rl_child_pid) {
+            // Kill readline process to refresh prompt
+            kill(rl_child_pid, SIGINT);
+        }
+    }
+}
+
 void yyerror(char *s) {
     fprintf(stderr, "Line %d: %s\n", yylineno, s);
 }
 
 int main(int argc, char*argv[]) {
+    signal(SIGINT, sighandler);
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         if (yyin == NULL) {
             print_errno("Could not open file for reading.");
         }
+        yyparse();
     }
-    yyparse();
+    else {
+        while(keep_alive) {
+            int pipes[2];
+            int history_pipes[2];
+            if (pipe(pipes) < 0) {
+                print_error("Could not open pipe for REPL.");
+                exit(1);
+            }
+            if (pipe(history_pipes) < 0) {
+                print_error("Could not open pipe for command history.");
+            }
+            // Pipe input into Bison
+            yyin = fdopen(pipes[0], "r");
+            // Fork process for readline
+            rl_child_pid = fork();
+            if (!rl_child_pid) {
+                signal(SIGINT, readline_sigint_handler);
+                close(pipes[0]);
+                close(history_pipes[0]);
+                char *line = readline(prompt);
+                if (line == NULL) {
+                    printf("\n[Reached EOF]\n");
+                    // Free dynamically allocated memory before exiting
+                    free(line);
+                    // Close pipes before exiting
+                    close(pipes[1]);
+                    close(history_pipes[1]);
+                    exit(EOF_EXIT_CODE);
+                }
+                size_t read_size = strlen(line);
+                // Reallocate line buffer to make space for a newline
+                ++read_size;
+                char *new_ptr = realloc(line, sizeof(char) * read_size + 1);
+                if (new_ptr == NULL) {
+                    print_error("Out of memory.");
+                }
+                line = new_ptr;
+                // Add newline to line buffer
+                line[read_size - 1] = '\n';
+                line[read_size] = '\0';
+                // Limit write size to INPUT_BUF_SIZE
+                size_t write_size = (INPUT_BUF_SIZE > read_size)
+                                    ? read_size : INPUT_BUF_SIZE;
+                // Write input to pipe -> Bison
+                write(pipes[1], line, write_size);
+                // Write input to pipe -> readline history
+                write(history_pipes[1], line, write_size);
+                // Free dynamically allocated memory before exiting
+                free(line);
+                // Close pipes before exiting
+                close(pipes[1]);
+                close(history_pipes[1]);
+                exit(0);
+            }
+            else {
+                int status;
+                waitpid(rl_child_pid, &status, 0);
+                if (WIFEXITED(status)) {
+                    status = WEXITSTATUS(status);
+                    // Exit if EOF reached
+                    if (status == EOF_EXIT_CODE) {
+                        // Close pipes before exiting
+                        close(pipes[0]);
+                        close(pipes[1]);
+                        close(history_pipes[0]);
+                        close(history_pipes[1]);
+                        // Clear readline's history
+                        clear_history();
+                        exit(0);
+                    }
+                    // Prepare for re-displaying prompt
+                    else if (status == SIGINT_EXIT_CODE) {
+                        // Close pipes before relooping
+                        close(pipes[0]);
+                        close(pipes[1]);
+                        close(history_pipes[0]);
+                        close(history_pipes[1]);
+                        // Go to new line before relooping
+                        write(STDOUT_FILENO, "\n", 1);
+                        continue;
+                    }
+                }
+                close(pipes[1]);
+                close(history_pipes[1]);
+                // Read user input for adding to history
+                int bytes = read(history_pipes[0], input, INPUT_BUF_SIZE);
+                close(history_pipes[0]);
+                // Overwrite newline with NULL
+                input[bytes - 1] = '\0';
+                // Add the input to readline's history
+                add_history(input);
+                yyparse();
+                close(pipes[0]);
+            }
+        }
+    }
     return 0;
 }
     /* ============= END SUBROUTINES ============= */
