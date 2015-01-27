@@ -70,7 +70,7 @@ statement:
          | float_expr           { printf("%f\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
          | int_array_expr       {
-                                    printf("[");
+                                    printf("{");
                                     int i = 1;
                                     while(i < $1[0]) {
                                         printf("%d", $1[i]);
@@ -78,7 +78,7 @@ statement:
                                             printf(", ");
                                         }
                                     }
-                                    printf("]\n");
+                                    printf("}\n");
                                     free($1);
                                 }
          | VARIABLE '=' expr    { sym[$1] = $3; }
@@ -124,6 +124,17 @@ expr:
                                             free($3);
                                         }
          | '#' int_array_expr       { $$ = $2[0] - 1; free($2); }
+         | int_array_expr '[' expr ']'          {
+
+                if ($3 >= 0 && $3 < $1[0] - 1) {
+                    $$ = $1[$3 + 1];
+                }
+                else {
+                    print_error("Array index out of bounds.");
+                    $$ = 0;
+                }
+
+                                                }
          ;
 str_expr:
            STRING                   { $$ = $1; }
@@ -307,6 +318,7 @@ str_expr:
             $$ = substring($1, 0, strlen($1), $5);
                                                     }
          | '(' str_expr ')'         { $$ = $2; }
+         ;
 
 float_expr:
            FLOAT                            { $$ = $1; }
@@ -348,6 +360,7 @@ float_expr:
          | expr '*''*' float_expr           { $$ = powf($1, $4); }
          | '(' float_expr ')'               { $$ = $2; }
          ;
+
 int_array_expr:
                 INT_ARRAY                   { $$ = $1; }
               | int_array_expr '+' int_array_expr   {
@@ -455,12 +468,13 @@ int_array_expr:
             }
         }
         else {
-            print_error("Cannot multiple array by negative integer.");
+            print_error("Cannot multiply array by negative integer.");
             $$ = $1;
         }
 
                                                     }
             | '(' int_array_expr ')'               { $$ = $2; }
+        ;
 %%
     /* ================ END RULES ================ */
 

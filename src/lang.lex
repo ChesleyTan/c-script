@@ -150,7 +150,7 @@ WHITESPACE          [ \t]
                     }
     /* =========================================== */
     /* ================== Arrays ================= */
-"\["{WHITESPACE}*{INTEGER}   {
+"\{"{WHITESPACE}*{INTEGER}   {
 
     if (int_buf_resize(0) != -1) {
         int_buf_index = 1;
@@ -177,7 +177,7 @@ WHITESPACE          [ \t]
     }
 
                             }
-<INT_ARRAY_STATE>"]"    {
+<INT_ARRAY_STATE>"}"    {
 
     if (int_buf_resize(0) != -1) {
         #ifdef DEBUG
