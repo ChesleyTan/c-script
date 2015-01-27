@@ -1,5 +1,6 @@
     /* =============== DEFINITIONS ============= */
-%token INTEGER FLOAT VARIABLE STRING INT_ARRAY
+%token INTEGER BOOLEAN FLOAT VARIABLE STRING INT_ARRAY
+%token EQUALS IF ELSE
     /* Left-associative operator precedence */
 %left '+' '-'
 %left '*' '%'
@@ -40,6 +41,7 @@
 
 %union {
     char *strval;
+    char boolval;
     int intval;
     float floatval;
     int *int_arrayval;
@@ -239,41 +241,28 @@ str_expr:
 
                                     }
          | str_expr '[' expr ':' expr ']'   {
-
             $$ = substring($1, $3, $5, 1);
-
                                             }
          | str_expr '[' ':' expr ']'        {
-
             $$ = substring($1, 0, $4, 1);
-
                                             }
          | str_expr '[' expr ':' ']'        {
-
             $$ = substring($1, $3, strlen($1), 1);
-
                                             }
          | str_expr '[' expr ':' expr ':' expr ']'  {
-
             $$ = substring($1, $3, $5, $7);
-
                                                     }
          | str_expr '[' ':' expr ':' expr ']'       {
-
             $$ = substring($1, 0, $4, $6);
-
                                                     }
          | str_expr '[' expr ':' ':' expr ']'       {
-
             $$ = substring($1, $3, strlen($1), $6);
-
                                                     }
          | str_expr '[' ':' ':' expr ']'            {
-
             $$ = substring($1, 0, strlen($1), $5);
-
                                                     }
          | '(' str_expr ')'         { $$ = $2; }
+
 float_expr:
            FLOAT                            { $$ = $1; }
          | float_expr '+' float_expr        { $$ = $1 + $3; }

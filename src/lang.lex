@@ -25,6 +25,8 @@
     int *int_buf;
 %}
 
+    /* Parse state for control flow */
+%x CONTROL_STATE
     /* Parse state for strings */
 %x STRING_STATE 
     /* Parse state for comments */
@@ -33,11 +35,17 @@
 %x INT_ARRAY_STATE
 
 INTEGER             (-)?[0-9]+
+BOOLEAN		    true|false
 WHITESPACE          [ \t]
     /* ============= END DEFINITIONS ============= */
 
     /* ================== RULES ================== */
 %%
+    /*================ Control Flow ===============*/
+"=="		return EQUALS;
+"if"		return IF;
+"else"		return ELSE;
+    /* ============================================*/
     /* ================ Variables ================ */
 [a-z]           {
 
@@ -46,6 +54,20 @@ WHITESPACE          [ \t]
 
                 }
     /* =========================================== */
+    /* ================ Booleans ================= */
+{BOOLEAN}		{
+
+	#ifdef DEBUG
+	print_debug("Found boolean: %s", yytext);
+	#endif
+	if( strcmp(yytext, "true") == 0 ) {
+		yylval.boolval = 1;
+	} else {
+		yylval.boolval = 0;
+	}
+	return BOOLEAN;
+
+				}
     /* ================ Integers ================= */
 {INTEGER}      {
 
