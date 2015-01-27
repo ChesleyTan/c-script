@@ -92,7 +92,18 @@ expr:
          | expr '>''>' expr         { $$ = $1 >> $4; }
          | expr '<''<' expr         { $$ = $1 << $4; }
          | '(' expr ')'             { $$ = $2; }
-         | '#' str_expr             { $$ = strlen($2); }
+         | '#' str_expr             { $$ = strlen($2); free($2); }
+         | str_expr '[' str_expr ']'    {
+                                            char *ptr = strstr($1, $3);
+                                            if (ptr != NULL) {
+                                                $$ = ptr - $1;
+                                            }
+                                            else {
+                                                $$ = -1;
+                                            }
+                                            free($1);
+                                            free($3);
+                                        }
          ;
 str_expr:
            STRING                   { $$ = $1; }
@@ -193,10 +204,39 @@ str_expr:
             }
 
                                     }
-         | str_expr '[' expr ':' expr ']'   { $$ = substring($1, $3, $5, 1); }
+         | str_expr '[' expr ':' expr ']'   {
+
+            $$ = substring($1, $3, $5, 1);
+
+                                            }
+         | str_expr '[' ':' expr ']'        {
+
+            $$ = substring($1, 0, $4, 1);
+
+                                            }
+         | str_expr '[' expr ':' ']'        {
+
+            $$ = substring($1, $3, strlen($1), 1);
+
+                                            }
          | str_expr '[' expr ':' expr ':' expr ']'  {
 
             $$ = substring($1, $3, $5, $7);
+
+                                                    }
+         | str_expr '[' ':' expr ':' expr ']'       {
+
+            $$ = substring($1, 0, $4, $6);
+
+                                                    }
+         | str_expr '[' expr ':' ':' expr ']'       {
+
+            $$ = substring($1, $3, strlen($1), $6);
+
+                                                    }
+         | str_expr '[' ':' ':' expr ']'            {
+
+            $$ = substring($1, 0, strlen($1), $5);
 
                                                     }
          | '(' str_expr ')'         { $$ = $2; }
