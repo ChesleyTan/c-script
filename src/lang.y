@@ -3,13 +3,14 @@
 %token IF ENDIF ELSE WHILE GTE LTE EQL NEQ AND OR
     /* Left-associative operator precedence */
 %left '+' '-'
+%right '%' '#'
 %left AND OR
 %left EQL NEQ 
 %left GTE LTE 
 %left '*' '/' '<' '>' '|' '^'
 %left '(' ')' '[' ']' '{' '}'
     /* Right-associative operator precedence */
-%right '%' '#'
+%right '='
 %{
     #include <stdio.h>
     #include <stdlib.h>
