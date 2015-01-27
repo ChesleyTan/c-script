@@ -1,9 +1,11 @@
     /* =============== DEFINITIONS ============= */
 %token BOOLEAN INTEGER FLOAT VARIABLE STRING INT_ARRAY STRING_ARRAY
-%token IF ENDIF ELSE WHILE
+%token IF ENDIF ELSE WHILE GTE LTE EQL NEQ AND OR
     /* Left-associative operator precedence */
 %left '+' '-'
-%left GTE LTE EQL NEQ AND OR
+%left AND OR
+%left EQL NEQ 
+%left GTE LTE 
 %left '*' '/' '<' '>' '|' '^'
 %left '(' ')' '[' ']' '{' '}'
     /* Right-associative operator precedence */
@@ -75,7 +77,7 @@ program:
         ;
 
 statement:
-		 | bool_expr			{ printf("%d\n", $1); }
+         | bool_expr            { printf("%d\n", $1); }
          | expr                 { printf("%d\n", $1); }
          | float_expr           { printf("%f\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
@@ -106,49 +108,48 @@ statement:
                                 }
          | VARIABLE '=' expr    { sym[$1] = $3; }
          ;
-		
+        
 bool_expr:
-		   BOOLEAN					{ $$ = $1 }
-		 | bool_expr OR bool_expr { $$ = $1 || $3 }
-		 | expr OR bool_expr 		{ $$ = $1 || $3 }
-		 | bool_expr OR expr 		{ $$ = $1 || $3 }
-		 | expr OR expr 			{ $$ = $1 || $3 }
-		 | bool_expr AND bool_expr { $$ = $1 && $3 }
-		 | expr AND bool_expr 		{ $$ = $1 && $3 }
-		 | bool_expr AND expr 		{ $$ = $1 && $3 }
-		 | expr AND expr 			{ $$ = $1 && $3 }
-		 | bool_expr EQL bool_expr { $$ = $1 == $3 }
-		 | expr EQL bool_expr 		{ $$ = $1 == $3 }
-		 | bool_expr EQL expr 		{ $$ = $1 == $3 }
-		 | expr EQL expr 			{ $$ = $1 == $3 }
-		 | expr '>' expr			{ $$ = $1 > $3 }
-		 | bool_expr '>' expr		{ $$ = $1 > $3 }
-		 | expr '>' bool_expr		{ $$ = $1 > $3 }
-		 | bool_expr '>' bool_expr	{ $$ = $1 > $3 }
-		 | expr '<' expr			{ $$ = $1 < $3 }
-		 | bool_expr '<' expr		{ $$ = $1 < $3 }
-		 | expr '<' bool_expr		{ $$ = $1 < $3 }
-		 | bool_expr LTE bool_expr	{ $$ = $1 < $3 }
-		 | expr GTE expr			{ $$ = $1 >= $3 }
-		 | bool_expr GTE expr		{ $$ = $1 >= $3 }
-		 | expr GTE bool_expr		{ $$ = $1 >= $3 }
-		 | bool_expr GTE bool_expr	{ $$ = $1 >= $3 }
-		 | expr LTE expr			{ $$ = $1 <= $3 }
-		 | bool_expr LTE expr		{ $$ = $1 <= $3 }
-		 | expr LTE bool_expr		{ $$ = $1 <= $3 }
-		 | bool_expr LTE bool_expr	{ $$ = $1 <= $3 }
+           BOOLEAN                  { $$ = $1; }
+         | bool_expr OR bool_expr   { $$ = $1 || $3; }
+         | expr OR bool_expr        { $$ = $1 || $3; }
+         | bool_expr OR expr        { $$ = $1 || $3; }
+         | expr OR expr             { $$ = $1 || $3; }
+         | bool_expr AND bool_expr  { $$ = $1 && $3; }
+         | expr AND bool_expr       { $$ = $1 && $3; }
+         | bool_expr AND expr       { $$ = $1 && $3; }
+         | expr AND expr            { $$ = $1 && $3; }
+         | bool_expr EQL bool_expr  { $$ = $1 == $3; }
+         | expr EQL bool_expr       { $$ = $1 == $3; }
+         | bool_expr EQL expr       { $$ = $1 == $3; }
+         | expr EQL expr            { $$ = $1 == $3; }
+         | expr '>' expr            { $$ = $1 > $3; }
+         | bool_expr '>' expr       { $$ = $1 > $3; }
+         | expr '>' bool_expr       { $$ = $1 > $3; }
+         | bool_expr '>' bool_expr  { $$ = $1 > $3; }
+         | expr '<' expr            { $$ = $1 < $3; }
+         | bool_expr '<' expr       { $$ = $1 < $3; }
+         | expr '<' bool_expr       { $$ = $1 < $3; }
+         | expr GTE expr            { $$ = $1 >= $3; }
+         | bool_expr GTE expr       { $$ = $1 >= $3; }
+         | expr GTE bool_expr       { $$ = $1 >= $3; }
+         | bool_expr GTE bool_expr  { $$ = $1 >= $3; }
+         | expr LTE expr            { $$ = $1 <= $3; }
+         | bool_expr LTE expr       { $$ = $1 <= $3; }
+         | expr LTE bool_expr       { $$ = $1 <= $3; }
+         | bool_expr LTE bool_expr  { $$ = $1 <= $3; }
 
 expr:
            INTEGER                  { $$ = $1; }
          | VARIABLE                 { $$ = sym[$1]; }
          | expr '+' expr            { $$ = $1 + $3; }
-		 | bool_expr '+' expr		{ $$ = $1 + $3; }
-		 | expr '+' bool_expr		{ $$ = $1 + $3; }
-		 | bool_expr '+' bool_expr  { $$ = $1 + $3; }
+         | bool_expr '+' expr       { $$ = $1 + $3; }
+         | expr '+' bool_expr       { $$ = $1 + $3; }
+         | bool_expr '+' bool_expr  { $$ = $1 + $3; }
          | expr '-' expr            { $$ = $1 - $3; }
-		 | bool_expr '-' expr		{ $$ = $1 - $3; }
-		 | expr '-' bool_expr		{ $$ = $1 - $3; }
-		 | bool_expr '-' bool_expr  { $$ = $1 - $3; }
+         | bool_expr '-' expr       { $$ = $1 - $3; }
+         | expr '-' bool_expr       { $$ = $1 - $3; }
+         | bool_expr '-' bool_expr  { $$ = $1 - $3; }
          | expr '*' expr            { $$ = $1 * $3; }
          | expr '/' expr            {
 
