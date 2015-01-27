@@ -1,5 +1,5 @@
     /* =============== DEFINITIONS ============= */
-%token INTEGER FLOAT VARIABLE STRING
+%token INTEGER FLOAT VARIABLE STRING INT_ARRAY
     /* Left-associative operator precedence */
 %left '+' '-'
 %left '*' '%'
@@ -23,9 +23,10 @@
 
     void yyerror(char *);
     int yylex(void);
-    int sym[26];
     extern FILE * yyin;
     extern int yylineno;
+
+    int sym[26];
     char keep_alive = 1;
     char input[INPUT_BUF_SIZE];
     int rl_child_pid;
@@ -34,12 +35,14 @@
     static void readline_sigint_handler();
     static void sighandler(int signo);
     char * substring(char *str, int b1, int b2, int step);
+
 %}
 
 %union {
     char *strval;
     int intval;
     float floatval;
+    int *int_arrayval;
 }
 
 %type <strval> STRING
@@ -47,6 +50,8 @@
 %type <intval> VARIABLE
 %type <intval> expr
 %type <intval> INTEGER
+%type <int_arrayval> INT_ARRAY
+%type <int_arrayval> int_array_expr
 %type <floatval> FLOAT
 %type <floatval> float_expr
     /* ============= END DEFINITIONS ============= */
@@ -62,6 +67,18 @@ statement:
          | expr                 { printf("%d\n", $1); }
          | float_expr           { printf("%f\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
+         | int_array_expr       {
+                                    printf("[");
+                                    int i = 1;
+                                    while(i < $1[0]) {
+                                        printf("%d", $1[i]);
+                                        if (++i < $1[0]) {
+                                            printf(", ");
+                                        }
+                                    }
+                                    printf("]\n");
+                                    free($1);
+                                }
          | VARIABLE '=' expr    { sym[$1] = $3; }
          ;
 expr:
@@ -104,6 +121,7 @@ expr:
                                             free($1);
                                             free($3);
                                         }
+         | '#' int_array_expr       { $$ = $2[0] - 1; free($2); }
          ;
 str_expr:
            STRING                   { $$ = $1; }
@@ -296,6 +314,8 @@ float_expr:
          | expr '*''*' float_expr           { $$ = powf($1, $4); }
          | '(' float_expr ')'               { $$ = $2; }
          ;
+int_array_expr:
+                INT_ARRAY                   { $$ = $1; }
 %%
     /* ================ END RULES ================ */
 

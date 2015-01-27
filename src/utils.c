@@ -23,3 +23,11 @@ void print_errno(const char *message) {
             fprintf(stderr, "%s%s%s%s %s%s->%s %s%s%s%s\n", bold_prefix, fg_red_196, message, reset, bold_prefix, fg_white, reset, bold_prefix, fg_red_160, strerror(errno), reset);
     }
 }
+
+int * intdup(const int *src, size_t len) {
+    int *i = (int *) malloc(sizeof(int) * len);
+    if (i != NULL) {
+        memcpy(i, src, len * sizeof(int));
+    }
+    return i;
+}

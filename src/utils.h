@@ -23,3 +23,4 @@ static const char *fg_white = "38;5;15m";
 void print_error(const char *format, ...);
 void print_debug(const char *format, ...);
 void print_errno(const char *message);
+int * intdup(const int *src, size_t len);
