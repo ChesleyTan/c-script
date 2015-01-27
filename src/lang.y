@@ -131,8 +131,13 @@ str_expr:
 
             char *s = (char *) malloc(sizeof(char) *
                 (strlen($1) + strlen($3) + 1));
-            strcpy(s, $1);
-            strcat(s, $3);
+            if (s != NULL) {
+                strcpy(s, $1);
+                strcat(s, $3);
+            }
+            else {
+                print_error("Out of memory.");
+            }
             free($1);
             free($3);
             $$ = s;
@@ -143,15 +148,25 @@ str_expr:
             char *s;
             if ($1 > 0) {
                 s = (char *) malloc(sizeof(char) * $1 * strlen($3) + 1);
-                int count = 1;
-                strcpy(s, $3);
-                while (count++ < $1) {
-                    strcat(s, $3);
+                if (s != NULL) {
+                    int count = 1;
+                    strcpy(s, $3);
+                    while (count++ < $1) {
+                        strcat(s, $3);
+                    }
+                }
+                else {
+                    print_error("Out of memory.");
                 }
             }
             else {
                 s = (char *) malloc(sizeof(char));
-                s[0] = '\0';
+                if (s != NULL) {
+                    s[0] = '\0';
+                }
+                else {
+                    print_error("Out of memory.");
+                }
             }
             free($3);
             $$ = s;
@@ -162,15 +177,25 @@ str_expr:
             char *s;
             if ($3 > 0) {
                 s = (char *) malloc(sizeof(char) * $3 * strlen($1) + 1);
-                int count = 1;
-                strcpy(s, $1);
-                while (count++ < $3) {
-                    strcat(s, $1);
+                if (s != NULL) {
+                    int count = 1;
+                    strcpy(s, $1);
+                    while (count++ < $3) {
+                        strcat(s, $1);
+                    }
+                }
+                else {
+                    print_error("Out of memory.");
                 }
             }
             else {
                 s = (char *) malloc(sizeof(char));
-                s[0] = '\0';
+                if (s != NULL) {
+                    s[0] = '\0';
+                }
+                else {
+                    print_error("Out of memory.");
+                }
             }
             free($1);
             $$ = s;
@@ -184,10 +209,15 @@ str_expr:
                 /* Allocate memory for result */
                 char *s = (char *) malloc(sizeof(char) *
                     (strlen($1) - match_len + 1));
-                /* Copy substring before match */
-                strncpy(s, $1, match - $1);
-                /* Copy substring after match */
-                strcpy(s+(int)(match - $1), match + match_len);
+                if (s != NULL) {
+                    /* Copy substring before match */
+                    strncpy(s, $1, match - $1);
+                    /* Copy substring after match */
+                    strcpy(s+(int)(match - $1), match + match_len);
+                }
+                else {
+                    print_error("Out of memory.");
+                }
                 free($1);
                 free($3);
                 $$ = s;
@@ -201,7 +231,12 @@ str_expr:
          | str_expr '+' expr        {
 
             char *s = (char *) malloc(sizeof(char) * (strlen($1) + 100));
-            snprintf(s, 100, "%s%d", $1, $3);
+            if (s != NULL) {
+                snprintf(s, 100, "%s%d", $1, $3);
+            }
+            else {
+                print_error("Out of memory.");
+            }
             free($1);
             $$ = s;
 
@@ -209,7 +244,12 @@ str_expr:
          | expr '+' str_expr        {
 
             char *s = (char *) malloc(sizeof(char) * (strlen($3) + 100));
-            snprintf(s, 100, "%d%s", $1, $3);
+            if (s != NULL) {
+                snprintf(s, 100, "%d%s", $1, $3);
+            }
+            else {
+                print_error("Out of memory.");
+            }
             free($3);
             $$ = s;
 
@@ -223,16 +263,21 @@ str_expr:
             int len = strlen($1);
             if (len > 0) {
                 char *s = (char *) calloc(2, sizeof(char));
-                int index = $3;
-                index %= len;
-                if (index < 0) {
-                    s[0] = $1[len + index];
+                if (s != NULL) {
+                    int index = $3;
+                    index %= len;
+                    if (index < 0) {
+                        s[0] = $1[len + index];
+                    }
+                    else {
+                        s[0] = $1[index];
+                    }
+                    free($1);
+                    s[1] = '\0';
                 }
                 else {
-                    s[0] = $1[index];
+                    print_error("Out of memory.");
                 }
-                free($1);
-                s[1] = '\0';
                 $$ = s;
             }
             else {
@@ -305,6 +350,117 @@ float_expr:
          ;
 int_array_expr:
                 INT_ARRAY                   { $$ = $1; }
+              | int_array_expr '+' int_array_expr   {
+
+        int *i = (int *) malloc(sizeof(int) * ($1[0] + $3[0] + 1));
+        if (i != NULL) {
+            int i_index = 0;
+            int t_index = 0;
+            i[0] = $1[0] + $3[0] - 1;
+            while (++i_index < $1[0]) {
+                i[i_index] = $1[++t_index];
+            }
+            i_index = $1[0] - 1;
+            t_index = 0;
+            while (++t_index < $3[0]) {
+                i[++i_index] = $3[t_index];
+            }
+        }
+        else {
+            print_error("Out of memory.");
+        }
+        free($1);
+        free($3);
+        $$ = i;
+
+                                                    }
+              | int_array_expr '+' expr             {
+
+        int *i = (int *) malloc(sizeof(int) * ($1[0] + 1));
+        if (i != NULL) {
+            i[0] = $1[0] + 1;
+            int p;
+            for (p = 1;p < $1[0];++p) {
+                i[p] = $1[p];
+            }
+            i[$1[0]] = $3;
+            free($1);
+            $$ = i;
+        }
+        else {
+            print_error("Out of memory.");
+            $$ = $1;
+        }
+
+                                                    }
+              | int_array_expr '-' expr             {
+
+        int match = -1;
+        int p;
+        for (p = 1;p < $1[0];++p) {
+            if ($1[p] == $3) {
+                // Match position includes 0 index
+                match = p;
+            }
+        }
+        if (match != -1) {
+            #ifdef DEBUG
+            print_debug("Found match at %d", match);
+            #endif
+            int *i = (int *) malloc(sizeof(int) * ($1[0] - 1));
+            if (i != NULL) {
+                i[0] = $1[0] - 1;
+                for (p = 1;p < match;++p) {
+                    i[p] = $1[p];
+                }
+                for (p = match;p < $1[0] - 1;++p) {
+                    i[p] = $1[p + 1];
+                }
+                free($1);
+                $$ = i;
+            }
+            else {
+                print_error("Out of memory.");
+            }
+        }
+        else {
+            #ifdef DEBUG
+            print_debug("No match.");
+            #endif
+            $$ = $1;
+        }
+
+                                                    }
+              | int_array_expr '*' expr   {
+
+        if ($3 >= 0) {
+            int *i = (int *) malloc(sizeof(int) * (($1[0] - 1) * $3 + 1));
+            if (i != NULL) {
+                int mult = 0;
+                int p = 0;
+                i[0] = ($1[0] - 1) * $3 + 1;
+                printf("New array of size %d\n", i[0]);
+                while (++mult <= $3) {
+                    int q;
+                    for (q = 1;q < $1[0];++q) {
+                        i[++p] = $1[q];
+                    }
+                }
+                free($1);
+                $$ = i;
+            }
+            else {
+                print_error("Out of memory.");
+                $$ = $1;
+            }
+        }
+        else {
+            print_error("Cannot multiple array by negative integer.");
+            $$ = $1;
+        }
+
+                                                    }
+            | '(' int_array_expr ')'               { $$ = $2; }
 %%
     /* ================ END RULES ================ */
 
@@ -336,7 +492,12 @@ char * substring(char *str, int b1, int b2, int step) {
     if (step < 0) {
         print_error("Step size must be positive; To reverse, change the bounds.");
         char *s = (char *) malloc(sizeof(char));
-        s[0] = '\0';
+        if (s != NULL) {
+            s[0] = '\0';
+        }
+        else {
+            print_error("Out of memory.");
+        }
         return s;
     }
     int len = strlen(str);
@@ -366,25 +527,30 @@ char * substring(char *str, int b1, int b2, int step) {
         #endif
         char *s = (char *) malloc(sizeof(char) *
             ((abs(bound1 - bound2) + 1) / step) + 1);
-        int s_index = 0;
-        if (bound1 < bound2 || (isAscending && bound1 == bound2)) {
-            s[s_index++] = str[bound1];
-            bound1 += step;
-            while (bound1 < bound2 ||
-            (isAscending == 1 && bound1 == bound2)) {
+        if (s != NULL) {
+            int s_index = 0;
+            if (bound1 < bound2 || (isAscending && bound1 == bound2)) {
                 s[s_index++] = str[bound1];
                 bound1 += step;
+                while (bound1 < bound2 ||
+                (isAscending == 1 && bound1 == bound2)) {
+                    s[s_index++] = str[bound1];
+                    bound1 += step;
+                }
             }
-        }
-        else if (bound1 > bound2) {
-            s[s_index++] = str[bound1];
-            bound1 -= step;
-            while (bound1 >= bound2) {
+            else if (bound1 > bound2) {
                 s[s_index++] = str[bound1];
                 bound1 -= step;
+                while (bound1 >= bound2) {
+                    s[s_index++] = str[bound1];
+                    bound1 -= step;
+                }
             }
+            s[s_index++] = '\0';
         }
-        s[s_index++] = '\0';
+        else {
+            print_error("Out of memory.");
+        }
         free(str);
         return s;
     }
