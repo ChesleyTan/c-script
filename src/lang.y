@@ -30,6 +30,10 @@
     char input[INPUT_BUF_SIZE];
     int rl_child_pid;
     const char *prompt = ">> ";
+
+    static void readline_sigint_handler();
+    static void sighandler(int signo);
+    char * substring(char *str, int b1, int b2, int step);
 %}
 
 %union {
@@ -189,68 +193,12 @@ str_expr:
             }
 
                                     }
-         | str_expr '[' expr ':' expr ']'   {
+         | str_expr '[' expr ':' expr ']'   { $$ = substring($1, $3, $5, 1); }
+         | str_expr '[' expr ':' expr ':' expr ']'  {
 
-            /*
-            * Use int, rather than size_t for
-            * correct signed to signed comparison
-            */
-            /*
-            * Exclusive of second bound if
-            * ascending; Inclusive otherwise
-            */
-            int len = strlen($1);
-            if (len > 0) {
-                int bound1 = $3 % len;
-                int bound2 = $5 % (len + 1);
-                char isAscending = 0;
-                if (bound1 < 0) {
-                    bound1 = len + bound1;
-                }
-                if (bound2 < 0) {
-                    bound2 = len + bound2;
-                }
-                if (bound1 < bound2) {
-                    bound2 -= 1;
-                    isAscending = 1;
-                }
-                #ifdef DEBUG
-                if (!isAscending && bound1 == bound2) {
-                    print_debug("Substring from %d to %d (Exclusive)",
-                        bound1, bound2);
-                }
-                else {
-                    print_debug("Substring from %d to %d (Inclusive)",
-                        bound1, bound2);
-                }
-                #endif
-                char *s = (char *) malloc(sizeof(char) *
-                    (abs(bound1 - bound2) + 2));
-                int s_index = 0;
-                if (bound1 < bound2 || (isAscending && bound1 == bound2)) {
-                    s[s_index++] = $1[bound1++];
-                    while (bound1 < bound2 ||
-                    (isAscending == 1 && bound1 == bound2)) {
-                        s[s_index++] =
-                        $1[bound1++];
-                    }
-                }
-                else if (bound1 > bound2) {
-                    s[s_index++] = $1[bound1--];
-                    while (bound1 >= bound2) {
-                        s[s_index++] =
-                        $1[bound1--];
-                    }
-                }
-                s[s_index++] = '\0';
-                free($1);
-                $$ = s;
-            }
-            else {
-                $$ = $1;
-            }
+            $$ = substring($1, $3, $5, $7);
 
-                                            }
+                                                    }
          | '(' str_expr ')'         { $$ = $2; }
 float_expr:
            FLOAT                            { $$ = $1; }
@@ -307,6 +255,76 @@ static void sighandler(int signo) {
             // Kill readline process to refresh prompt
             kill(rl_child_pid, SIGINT);
         }
+    }
+}
+
+char * substring(char *str, int b1, int b2, int step) {
+    /*
+    * Use int, rather than size_t for
+    * correct signed to signed comparison
+    */
+    /*
+    * Exclusive of second bound if
+    * ascending; Inclusive otherwise
+    */
+    /* Prevent negative step */
+    if (step < 0) {
+        print_error("Step size must be positive; To reverse, change the bounds.");
+        char *s = (char *) malloc(sizeof(char));
+        s[0] = '\0';
+        return s;
+    }
+    int len = strlen(str);
+    if (len > 0) {
+        int bound1 = b1 % len;
+        int bound2 = b2 % (len + 1);
+        char isAscending = 0;
+        if (bound1 < 0) {
+            bound1 = len + bound1;
+        }
+        if (bound2 < 0) {
+            bound2 = len + bound2;
+        }
+        if (bound1 < bound2) {
+            bound2 -= 1;
+            isAscending = 1;
+        }
+        #ifdef DEBUG
+        if (!isAscending && bound1 == bound2) {
+            print_debug("Substring from %d to %d (Exclusive)",
+                bound1, bound2);
+        }
+        else {
+            print_debug("Substring from %d to %d (Inclusive)",
+                bound1, bound2);
+        }
+        #endif
+        char *s = (char *) malloc(sizeof(char) *
+            ((abs(bound1 - bound2) + 1) / step) + 1);
+        int s_index = 0;
+        if (bound1 < bound2 || (isAscending && bound1 == bound2)) {
+            s[s_index++] = str[bound1];
+            bound1 += step;
+            while (bound1 < bound2 ||
+            (isAscending == 1 && bound1 == bound2)) {
+                s[s_index++] = str[bound1];
+                bound1 += step;
+            }
+        }
+        else if (bound1 > bound2) {
+            s[s_index++] = str[bound1];
+            bound1 -= step;
+            while (bound1 >= bound2) {
+                s[s_index++] = str[bound1];
+                bound1 -= step;
+            }
+        }
+        s[s_index++] = '\0';
+        free(str);
+        return s;
+    }
+    else {
+        return str;
     }
 }
 
