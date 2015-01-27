@@ -1,4 +1,5 @@
     /* =============== DEFINITIONS ============= */
+%option stack
 %{
     #include <stdio.h>
     #include <stdlib.h>
@@ -13,29 +14,40 @@
     void yyerror(char *);
     int buf_resize(size_t);
     int int_buf_resize(size_t);
+    int str_buf_resize(size_t);
+    char *buf;
     size_t buf_size = 0;
     size_t buf_index = 0;
-    char *buf;
-    size_t int_buf_size = 0;
-    size_t int_buf_index = 0;
-    /* 
+    char buf_pushed = 0;
+    /*
      * NOTE: int arrays are delimited with their size (inclusive of the 0 index)
-     * at index 0 
+     * at index 0
      */
     int *int_buf;
+    size_t int_buf_size = 0;
+    size_t int_buf_index = 0;
+    /*
+     * NOTE: string arrays are delimited with a trailing null
+     */
+    char **str_buf;
+    size_t str_buf_size = 0;
+    size_t str_buf_index = 0;
+
 %}
 
     /* Parse state for control flow */
 %x CONTROL_STATE
     /* Parse state for strings */
-%x STRING_STATE 
+%x STRING_STATE
     /* Parse state for comments */
 %x COMMENT
     /* Parse state for integer arrays */
 %x INT_ARRAY_STATE
+    /* Parse state for string arrays */
+%x STRING_ARRAY_STATE
 
 INTEGER             (-)?[0-9]+
-BOOLEAN				true|false
+BOOLEAN             true|false
 WHITESPACE          [ \t]
     /* ============= END DEFINITIONS ============= */
 
@@ -61,7 +73,7 @@ WHITESPACE          [ \t]
 	#ifdef DEBUG
 	print_debug("Found boolean: %s", yytext );
 	#endif
-	if (strcmp( yytext, "true")){
+	if (strcmp( yytext, "true") == 0){
 		yylval.boolval = 1;
 	} else {
 		yylval.boolval = 0;
@@ -102,7 +114,13 @@ WHITESPACE          [ \t]
                                             }
     /* =========================================== */
     /* ================= Strings ================= */
-\"              { BEGIN(STRING_STATE); buf_index = 0; }
+<INITIAL,STRING_ARRAY_STATE>\"          {
+
+    yy_push_state(STRING_STATE);
+    buf_index = 0;
+    buf_pushed = 0;
+
+                                        }
 <STRING_STATE>\\n   {
 
     if (buf_resize(1) != -1) {
@@ -129,14 +147,18 @@ WHITESPACE          [ \t]
     if (buf_resize(0) != -1) {
         /* Null-terminate string */
         buf[buf_index] = '\0';
-        /* Restore initial state */
-        BEGIN(INITIAL);
         #ifdef DEBUG
         print_debug("Found string '%s'", buf);
         #endif
-        yylval.strval = strdup(buf);
         buf_index = 0;
-        return STRING;
+        int previous_state = yy_top_state();
+        /* Restore initial state */
+        yy_pop_state();
+        if (previous_state != STRING_ARRAY_STATE) {
+            yylval.strval = strdup(buf);
+            buf_pushed = 1;
+            return STRING;
+        }
     }
 
                     }
@@ -146,8 +168,9 @@ WHITESPACE          [ \t]
         /* Null-terminate string */
         buf[buf_index] = '\0';
         print_error("String not terminated: '%s'", buf);
+        YY_FLUSH_BUFFER;
         /* Restore initial state */
-        BEGIN(INITIAL);
+        yy_pop_state();
     }
 
                     }
@@ -159,7 +182,7 @@ WHITESPACE          [ \t]
 
                     }
     /* =========================================== */
-    /* ================== Arrays ================= */
+    /* ============== Integer Arrays ============= */
 "\{"{WHITESPACE}*{INTEGER}   {
 
     if (int_buf_resize(0) != -1) {
@@ -167,7 +190,7 @@ WHITESPACE          [ \t]
         #ifdef DEBUG
         print_debug("Found int array start: %s", yytext);
         #endif
-        BEGIN(INT_ARRAY_STATE);
+        yy_push_state(INT_ARRAY_STATE);
         #ifdef DEBUG
         print_debug("Found int array element: %d",
             atoi(yytext + 1));
@@ -193,7 +216,7 @@ WHITESPACE          [ \t]
         #ifdef DEBUG
         print_debug("Found int array end: %s", yytext);
         #endif
-        BEGIN(INITIAL);
+        yy_pop_state();
         /* Put array size at 0 index of int_buf */
         int_buf[0] = int_buf_index;
         yylval.int_arrayval = intdup(int_buf, int_buf_index);
@@ -202,17 +225,80 @@ WHITESPACE          [ \t]
     }
 
                         }
+<INT_ARRAY_STATE>\n     {
+
+        print_error("Integer array not terminated.");
+        /* Restore initial state */
+        yy_pop_state();
+
+                        }
 <INT_ARRAY_STATE>,[ ]?          ;
 <INT_ARRAY_STATE>{WHITESPACE}   ;
+    /* =========================================== */
+    /* ============== String Arrays ============== */
+"\{"                        {
+
+    #ifdef DEBUG
+    print_debug("Found string array start: %s", yytext);
+    #endif
+    yy_push_state(STRING_ARRAY_STATE);
+
+                            }
+<STRING_ARRAY_STATE>"\}"    {
+
+    if (str_buf_resize(1) != -1) {
+        #ifdef DEBUG
+        print_debug("Found string array end: %s", yytext);
+        if (buf_pushed == 0) {
+            print_debug("Found string array element '%s'", buf);
+        }
+        #endif
+        if (buf_pushed == 0) {
+            char *s = strdup(buf);
+            str_buf[str_buf_index++] = s;
+        }
+        str_buf[str_buf_index] = NULL;
+        yylval.str_arrayval = str_arrdup(str_buf, str_buf_index + 1);
+        str_buf_index = 0;
+        yy_pop_state();
+        return STRING_ARRAY;
+    }
+    yy_pop_state();
+
+                            }
+<STRING_ARRAY_STATE>\n      {
+
+        print_error("String array not terminated.");
+        YY_FLUSH_BUFFER;
+        /* Restore initial state */
+        yy_pop_state();
+
+                            }
+<STRING_ARRAY_STATE>,[ ]?   {
+
+    if (str_buf_resize(1) != -1) {
+        #ifdef DEBUG
+        if (buf_pushed == 0) {
+            print_debug("Found string array element '%s'", buf);
+        }
+        #endif
+        if (buf_pushed == 0) {
+            char *s = strdup(buf);
+            str_buf[str_buf_index++] = s;
+        }
+    }
+
+                            }
+<STRING_ARRAY_STATE>{WHITESPACE}   ;
     /* =========================================== */
     /* ================ Operators ================ */
 [-+/*%()=\n^<>|\[\]:#]  { return *yytext; }
     /* =========================================== */
     /* ============= Ignore comments ============= */
-"/*"                            { BEGIN(COMMENT); }
+"/*"                            { yy_push_state(COMMENT); }
     /* Non-greedy regex */
 <COMMENT>(("*"[^/])?|[^*])*     ;
-<COMMENT>"*/"                   { BEGIN(INITIAL); }
+<COMMENT>"*/"                   { yy_pop_state(); }
     /* =========================================== */
     /* ============= Ignore whitespace =========== */
 {WHITESPACE}           ;
@@ -270,6 +356,31 @@ int int_buf_resize(size_t size_change) {
         int *new_ptr;
         if ((new_ptr = realloc(int_buf, sizeof(int) * int_buf_size))) {
             int_buf = new_ptr;
+        }
+        else {
+            return -1;
+        }
+    }
+    return 0;
+}
+int str_buf_resize(size_t size_change) {
+    /*
+        Resizes the buffer if necessary
+        Returns 0 on success; -1 on failure
+    */
+    if (str_buf_size == 0) {
+        if ((str_buf = (char **) malloc(2 * sizeof(char *)))) {
+            str_buf_size = 2;
+        }
+    }
+    else if (str_buf_index + size_change > str_buf_size - 1) {
+        str_buf_size *= 2;
+        #ifdef DEBUG
+        print_debug("String array buffer resized to %d", str_buf_size);
+        #endif
+        char **new_ptr;
+        if ((new_ptr = realloc(str_buf, sizeof(char *) * str_buf_size))) {
+            str_buf = new_ptr;
         }
         else {
             return -1;

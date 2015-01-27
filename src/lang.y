@@ -1,5 +1,5 @@
     /* =============== DEFINITIONS ============= */
-%token BOOLEAN INTEGER FLOAT VARIABLE STRING INT_ARRAY
+%token BOOLEAN INTEGER FLOAT VARIABLE STRING INT_ARRAY STRING_ARRAY
 %token IF ENDIF ELSE WHILE
     /* Left-associative operator precedence */
 %left '+' '-'
@@ -41,17 +41,20 @@
 %}
 
 %union {
-    char *strval;
     char boolval;
+    char *strval;
+    char **str_arrayval;
     int intval;
-    float floatval;
     int *int_arrayval;
+    float floatval;
 }
 
+%type <boolval> BOOLEAN
 %type <strval> STRING
 %type <strval> str_expr
-%type <boolval> BOOLEAN
 %type <boolval> bool_expr
+%type <str_arrayval> STRING_ARRAY
+%type <str_arrayval> str_array_expr
 %type <intval> VARIABLE
 %type <intval> expr
 %type <intval> INTEGER
@@ -79,6 +82,19 @@ statement:
                                     while(i < $1[0]) {
                                         printf("%d", $1[i]);
                                         if (++i < $1[0]) {
+                                            printf(", ");
+                                        }
+                                    }
+                                    printf("}\n");
+                                    free($1);
+                                }
+         | str_array_expr       {
+                                    printf("{");
+                                    int i = 0;
+                                    while($1[i]) {
+                                        printf("%s", $1[i]);
+                                        free($1[i]);
+                                        if ($1[++i]) {
                                             printf(", ");
                                         }
                                     }
@@ -360,6 +376,38 @@ str_expr:
             $$ = substring($1, 0, strlen($1), $5);
                                                     }
          | '(' str_expr ')'         { $$ = $2; }
+         | str_array_expr '[' expr ']'      {
+
+            /*
+            * Use int, rather than size_t for
+            * correct signed to signed comparison
+            */
+            int len = str_arrlen($1);
+            if (len > 0) {
+                int index = $3;
+                if ($3 >= 0 && $3 < len) {
+                    $$ = $1[$3];
+                }
+                else {
+                    print_error("Array index out of bounds.");
+                    index = 0;
+                    $$ = $1[index];
+                }
+                /* Free dynamically allocated memory */
+                int i;
+                for (i = 0;i < index;++i) {
+                    free($1[i]);
+                }
+                for (i = index + 1;i < len;++i) {
+                    free($1[i]);
+                }
+                free($1);
+            }
+            else {
+                $$ = $1[0];
+                free($1);
+            }
+                                            }
          ;
 
 float_expr:
@@ -517,6 +565,8 @@ int_array_expr:
                                                     }
             | '(' int_array_expr ')'               { $$ = $2; }
         ;
+str_array_expr:
+                STRING_ARRAY                       { $$ = $1; }
 %%
     /* ================ END RULES ================ */
 
