@@ -132,6 +132,8 @@ bool_expr:
 									} else {
 										$$ = 0;
 									}
+									free($1);
+									free($3);
 									
 									}
          | bool_expr '>' expr       { $$ = $1 > $3; }
@@ -147,6 +149,8 @@ bool_expr:
 									} else {
 										$$ = 0;
 									}
+									free($1);
+									free($3);
 									
 									}
          | expr GTE expr            { $$ = $1 >= $3; }
