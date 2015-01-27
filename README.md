@@ -1,10 +1,40 @@
-++C and GCZ transpiler
-===
+A scripting language written using Bison and Flex including a built-in REPL
+============
+#Building the Project
+Install the GNU Readline Library  
+Run `$ make`  
+#Running the Project
+Run `./lang <file>` or `./lang` for a shell  
 
-###Precompilation additions to the C programming language, including syntactic features to allow easier expression of ideas and lessen the verbosity of C source code
+#Features
+##REPL with navigation and command history
+##String operations
+    * Get element at index
+    * Substring
+    * Find substring
+    * Reversing
+    * Slicing
+    * Concatenation
+    * Subtraction
+    * Multiplication
+    * Integer to string coercion
+##String length
+    * Integer arithmetic with order of operations
+    * Modulus operation
+    * Exponent operation
+    * Bitwise operations: `^, |, <<, >>`
+##Floating point arithmetic with order of operations
+    * Modulus operation
+    * Exponent operation
+##Boolean operations
+    * Number Comparison: `>, >=, <, <=, ==, !=`
+    * Boolean comparison: `&&, ||`
+    * String Comparison: `>, >=, <, <=, ==, !=`
 
-##Features:
-* Automatic list/string concatenation and memory size checking/resizing
-* Haskell-like list comprehensions
-* String literals are printed to stdout by default
-* Code Beautification
+#File List
+src/lang.lex
+src/lang.y
+src/utils.c
+src/utils.h
+src/Makefile
+

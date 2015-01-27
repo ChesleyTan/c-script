@@ -7,7 +7,7 @@ LIBS=-lm -lreadline
 all:
 	bison -d lang.y
 	flex lang.lex
-	gcc $(DEBUG) $(WARNINGS) $(C_FILES) -o lang $(LIBS)
+	gcc $(WARNINGS) $(C_FILES) -o lang $(LIBS)
 	@make clean
 clean:
 	@rm lang.tab.*
