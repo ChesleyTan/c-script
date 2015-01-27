@@ -1,7 +1,12 @@
 C-Script
 ============
 #A scripting language written using Bison and Flex, and including a built-in REPL
-
+## Authors
+[Genji Noguchi] (https://github.com/genjinoguchi)  
+[Chesley Tan] (https://github.com/ChesleyTan)  
+[Daniel Zabari] (https://github.com/Zabari)  
+## About
+This project was written as a final project for the Fall 2014 Systems Level Programming class (4th period) at Stuyvesant High School
 ##Building the Project
 1. Install the GNU Readline Library  
 2. Run `$ make`  
