@@ -178,6 +178,22 @@ str_expr:
             }
 
                                     }
+         | str_expr '+' expr        {
+
+            char *s = (char *) malloc(sizeof(char) * (strlen($1) + 100));
+            snprintf(s, 100, "%s%d", $1, $3);
+            free($1);
+            $$ = s;
+
+                                    }
+         | expr '+' str_expr        {
+
+            char *s = (char *) malloc(sizeof(char) * (strlen($3) + 100));
+            snprintf(s, 100, "%d%s", $1, $3);
+            free($3);
+            $$ = s;
+
+                                    }
          | str_expr '[' expr ']'    {
 
             /*
