@@ -49,6 +49,8 @@
 
 %type <strval> STRING
 %type <strval> str_expr
+%type <boolval> BOOLEAN
+%type <boolval> bool_expr
 %type <intval> VARIABLE
 %type <intval> expr
 %type <intval> INTEGER
@@ -66,6 +68,7 @@ program:
         ;
 
 statement:
+		 | bool_expr			{ printf("%s\n", $1); }
          | expr                 { printf("%d\n", $1); }
          | float_expr           { printf("%f\n", $1); }
          | str_expr             { printf("%s\n", $1); free($1); }
@@ -83,6 +86,8 @@ statement:
                                 }
          | VARIABLE '=' expr    { sym[$1] = $3; }
          ;
+bool_expr:
+		 | BOOLEAN
 expr:
            INTEGER                  { $$ = $1; }
          | VARIABLE                 { $$ = sym[$1]; }
