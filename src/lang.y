@@ -125,12 +125,30 @@ bool_expr:
          | bool_expr EQL expr       { $$ = $1 == $3; }
          | expr EQL expr            { $$ = $1 == $3; }
          | expr '>' expr            { $$ = $1 > $3; }
+         | str_expr '>' str_expr    {
+
+		 							if(strcmp($1, $3)>0){
+										$$ = 1;
+									} else {
+										$$ = 0;
+									}
+									
+									}
          | bool_expr '>' expr       { $$ = $1 > $3; }
          | expr '>' bool_expr       { $$ = $1 > $3; }
          | bool_expr '>' bool_expr  { $$ = $1 > $3; }
          | expr '<' expr            { $$ = $1 < $3; }
          | bool_expr '<' expr       { $$ = $1 < $3; }
          | expr '<' bool_expr       { $$ = $1 < $3; }
+         | str_expr '<' str_expr    {
+
+		 							if(strcmp($3, $1)>0){
+										$$ = 1;
+									} else {
+										$$ = 0;
+									}
+									
+									}
          | expr GTE expr            { $$ = $1 >= $3; }
          | bool_expr GTE expr       { $$ = $1 >= $3; }
          | expr GTE bool_expr       { $$ = $1 >= $3; }
