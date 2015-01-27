@@ -2,7 +2,7 @@ A scripting language written using Bison and Flex including a built-in REPL
 ============
 #Building the Project
 Install the GNU Readline Library  
-Run `$ make`  
+Run `$ make` in /src 
 #Running the Project
 Run `./lang <file>` or `./lang` for a shell  
 
