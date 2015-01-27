@@ -88,6 +88,7 @@ expr:
          | expr '>''>' expr         { $$ = $1 >> $4; }
          | expr '<''<' expr         { $$ = $1 << $4; }
          | '(' expr ')'             { $$ = $2; }
+         | '#' str_expr             { $$ = strlen($2); }
          ;
 str_expr:
            STRING                   { $$ = $1; }
