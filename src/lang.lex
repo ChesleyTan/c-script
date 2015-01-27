@@ -35,16 +35,40 @@
 %x INT_ARRAY_STATE
 
 INTEGER             (-)?[0-9]+
-BOOLEAN		    true|false
+BOOLEAN				true|false
 WHITESPACE          [ \t]
     /* ============= END DEFINITIONS ============= */
 
     /* ================== RULES ================== */
 %%
     /*================ Control Flow ===============*/
-"=="		return EQUALS;
 "if"		return IF;
+"endif"		return ENDIF;
 "else"		return ELSE;
+"while"		return WHILE;
+    /* ============================================*/
+    /* ================ Comparators ===============*/
+">="		return GTE;
+"<="		return LTE;
+"=="		return EQL;
+"!="		return NEQ;
+"&&"		return AND;
+"||"		return OR;
+    /* ============================================*/
+    /* ================ Booleans ==================*/
+
+{BOOLEAN}		{
+	#ifdef DEBUG
+	print_debug("Found boolean: %s", yytext );
+	#endif
+	if (strcmp( yytext, "true")){
+		yylval.boolval = 1;
+	} else {
+		yylval.boolval = 0;
+	}
+	return BOOLEAN;
+
+				}
     /* ============================================*/
     /* ================ Variables ================ */
 [a-z]           {
@@ -54,20 +78,6 @@ WHITESPACE          [ \t]
 
                 }
     /* =========================================== */
-    /* ================ Booleans ================= */
-{BOOLEAN}		{
-
-	#ifdef DEBUG
-	print_debug("Found boolean: %s", yytext);
-	#endif
-	if( strcmp(yytext, "true") == 0 ) {
-		yylval.boolval = 1;
-	} else {
-		yylval.boolval = 0;
-	}
-	return BOOLEAN;
-
-				}
     /* ================ Integers ================= */
 {INTEGER}      {
 
@@ -150,7 +160,7 @@ WHITESPACE          [ \t]
                     }
     /* =========================================== */
     /* ================== Arrays ================= */
-"\["{WHITESPACE}*{INTEGER}   {
+"\{"{WHITESPACE}*{INTEGER}   {
 
     if (int_buf_resize(0) != -1) {
         int_buf_index = 1;
@@ -177,7 +187,7 @@ WHITESPACE          [ \t]
     }
 
                             }
-<INT_ARRAY_STATE>"]"    {
+<INT_ARRAY_STATE>"}"    {
 
     if (int_buf_resize(0) != -1) {
         #ifdef DEBUG

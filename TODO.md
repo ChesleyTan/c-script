@@ -1,7 +1,6 @@
 * Variables (String and Integer)(variable structs in a hash table?)
+* String array
 * String division
-* Array parsing, get element at index, concatenation, subarray?
-* Tuples parsing, get element at index, tuple arithmetic (element-wise)
+* Array subarray?
 * Control flow (if-elseif-else, while, for)
-* List comprehensions
 * Function definitions
