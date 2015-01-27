@@ -1,15 +1,17 @@
-A scripting language written using Bison and Flex including a built-in REPL
+C-Script
 ============
-#Building the Project
+#A scripting language written using Bison and Flex, and including a built-in REPL
+
+##Building the Project
 1. Install the GNU Readline Library  
 2. Run `$ make`  
 
-#Running the Project
-1. Run `./lang <file>` or alternatively `./lang` for an interactive shell  
+##Running the Project
+1. Run `$ ./lang <file>` or alternatively `$ ./lang` for an interactive shell  
 
-#Features
-##REPL with navigation and command history
-##String operations
+##Features
+####REPL with navigation and command history
+####String operations
 * Get element at index
 * Substring
 * Find substring
@@ -19,25 +21,28 @@ A scripting language written using Bison and Flex including a built-in REPL
 * Subtraction
 * Multiplication
 * Integer to string coercion
+* String length
 
-##String length
-* Integer arithmetic with order of operations
+####Integer arithmetic with order of operations
 * Modulus operation
 * Exponent operation
 * Bitwise operations: `^, |, <<, >>`
 
-##Floating point arithmetic with order of operations
+####Floating point arithmetic with order of operations
 * Modulus operation
 * Exponent operation
 
-##Boolean operations
+####Boolean operations
 * Number Comparison: `>, >=, <, <=, ==, !=`
 * Boolean comparison: `&&, ||`
 * String Comparison: `>, >=, <, <=, ==, !=`
 
-#File List
+##File List
 src/lang.lex  
 src/lang.y  
 src/utils.c  
 src/utils.h  
 src/Makefile  
+LICENSE  
+README.md  
+TODO.md  
