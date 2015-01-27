@@ -31,3 +31,19 @@ int * intdup(const int *src, size_t len) {
     }
     return i;
 }
+
+char ** str_arrdup(char **src, size_t len) {
+    char **arr = (char **) malloc(sizeof(char *) * len);
+    if (arr != NULL) {
+        memcpy(arr, src, len * sizeof(char *));
+    }
+    return arr;
+}
+
+int str_arrlen(char **arr) {
+    int i = 0;
+    while (arr[i]) {
+        ++i;
+    }
+    return i;
+}
