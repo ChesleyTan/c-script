@@ -234,6 +234,7 @@ WHITESPACE          [ \t]
                         }
 <INT_ARRAY_STATE>,[ ]?          ;
 <INT_ARRAY_STATE>{WHITESPACE}   ;
+<INT_ARRAY_STATE>.              ;
     /* =========================================== */
     /* ============== String Arrays ============== */
 "\{"                        {
@@ -256,6 +257,7 @@ WHITESPACE          [ \t]
         if (buf_pushed == 0) {
             char *s = strdup(buf);
             str_buf[str_buf_index++] = s;
+            buf_pushed = 1;
         }
         str_buf[str_buf_index] = NULL;
         yylval.str_arrayval = str_arrdup(str_buf, str_buf_index + 1);
@@ -285,11 +287,13 @@ WHITESPACE          [ \t]
         if (buf_pushed == 0) {
             char *s = strdup(buf);
             str_buf[str_buf_index++] = s;
+            buf_pushed = 1;
         }
     }
 
                             }
-<STRING_ARRAY_STATE>{WHITESPACE}   ;
+<STRING_ARRAY_STATE>{WHITESPACE}    ;
+<STRING_ARRAY_STATE>.               ;
     /* =========================================== */
     /* ================ Operators ================ */
 [-+/*%()=\n^<>|\[\]:#]  { return *yytext; }

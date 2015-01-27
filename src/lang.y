@@ -3,8 +3,11 @@
 %token IF ENDIF ELSE WHILE
     /* Left-associative operator precedence */
 %left '+' '-'
-%left '*' '%'
-%left '<' '>' GTE LTE EQL NEQ AND OR
+%left GTE LTE EQL NEQ AND OR
+%left '*' '/' '<' '>' '|' '^'
+%left '(' ')' '[' ']' '{' '}'
+    /* Right-associative operator precedence */
+%right '%' '#'
 %{
     #include <stdio.h>
     #include <stdlib.h>
@@ -182,6 +185,17 @@ expr:
                                             free($3);
                                         }
          | '#' int_array_expr       { $$ = $2[0] - 1; free($2); }
+         | '#' str_array_expr       {
+
+            int i = 0;
+            while ($2[i]) {
+                free($2[i]);
+                ++i;
+            }
+            free($2);
+            $$ = i;
+
+                                    }
          | int_array_expr '[' expr ']'          {
 
                 if ($3 >= 0 && $3 < $1[0] - 1) {
