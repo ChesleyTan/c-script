@@ -5,8 +5,8 @@
 %left '+' '-'
 %right '%' '#'
 %left AND OR
-%left EQL NEQ 
-%left GTE LTE 
+%left EQL NEQ
+%left GTE LTE
 %left '*' '/' '<' '>' '|' '^'
 %left '(' ')' '[' ']' '{' '}'
     /* Right-associative operator precedence */
@@ -24,6 +24,7 @@
     #include <readline/history.h>
 
     #include "utils.h"
+    #include "hash.h"
 
     #define INPUT_BUF_SIZE 2048
     #define EOF_EXIT_CODE 10
@@ -34,7 +35,9 @@
     extern FILE * yyin;
     extern int yylineno;
 
-    int sym[26];
+    int tsize = 50;
+    hash_table_t *sym;
+
     char keep_alive = 1;
     char input[INPUT_BUF_SIZE];
     int rl_child_pid;
@@ -49,6 +52,7 @@
 %union {
     char boolval;
     char *strval;
+    char *varval;
     char **str_arrayval;
     int intval;
     int *int_arrayval;
@@ -56,12 +60,12 @@
 }
 
 %type <boolval> BOOLEAN
+%type <boolval> bool_expr
 %type <strval> STRING
 %type <strval> str_expr
-%type <boolval> bool_expr
+%type <varval> VARIABLE
 %type <str_arrayval> STRING_ARRAY
 %type <str_arrayval> str_array_expr
-%type <intval> VARIABLE
 %type <intval> expr
 %type <intval> INTEGER
 %type <int_arrayval> INT_ARRAY
@@ -107,9 +111,24 @@ statement:
                                     printf("}\n");
                                     free($1);
                                 }
-         | VARIABLE '=' expr    { sym[$1] = $3; }
+         | VARIABLE '=' expr    {
+
+            int response = add(sym, $1);
+            if (response == 1) {
+                print_error("Ran out of memory.");
+            }
+            list_t *res = lookup(sym, $1);
+            #ifdef DEBUG
+            if (res == NULL) {
+                print_debug("Something went wrong in the hash table lookup");
+            }
+            #endif
+            res->i = $3;
+            free($1);
+
+                                }
          ;
-        
+
 bool_expr:
            BOOLEAN                  { $$ = $1; }
          | bool_expr OR bool_expr   { $$ = $1 || $3; }
@@ -127,15 +146,15 @@ bool_expr:
          | expr '>' expr            { $$ = $1 > $3; }
          | str_expr '>' str_expr    {
 
-		 							if(strcmp($1, $3)>0){
-										$$ = 1;
-									} else {
-										$$ = 0;
-									}
-									free($1);
-									free($3);
-									
-									}
+                                    if(strcmp($1, $3)>0){
+                                        $$ = 1;
+                                    } else {
+                                        $$ = 0;
+                                    }
+                                    free($1);
+                                    free($3);
+
+                                    }
          | bool_expr '>' expr       { $$ = $1 > $3; }
          | expr '>' bool_expr       { $$ = $1 > $3; }
          | bool_expr '>' bool_expr  { $$ = $1 > $3; }
@@ -144,15 +163,15 @@ bool_expr:
          | expr '<' bool_expr       { $$ = $1 < $3; }
          | str_expr '<' str_expr    {
 
-		 							if(strcmp($3, $1)>0){
-										$$ = 1;
-									} else {
-										$$ = 0;
-									}
-									free($1);
-									free($3);
-									
-									}
+                                    if(strcmp($3, $1)>0){
+                                        $$ = 1;
+                                    } else {
+                                        $$ = 0;
+                                    }
+                                    free($1);
+                                    free($3);
+
+                                    }
          | expr GTE expr            { $$ = $1 >= $3; }
          | bool_expr GTE expr       { $$ = $1 >= $3; }
          | expr GTE bool_expr       { $$ = $1 >= $3; }
@@ -164,7 +183,18 @@ bool_expr:
 
 expr:
            INTEGER                  { $$ = $1; }
-         | VARIABLE                 { $$ = sym[$1]; }
+         | VARIABLE                 {
+
+            list_t *res = lookup(sym, $1);
+            if (res == NULL) {
+                print_error("Variable has not been initialized.");
+                $$ = 0;
+            }
+            else {
+                $$=res->i;
+            }
+            free($1);
+                                    }
          | expr '+' expr            { $$ = $1 + $3; }
          | bool_expr '+' expr       { $$ = $1 + $3; }
          | expr '+' bool_expr       { $$ = $1 + $3; }
@@ -709,6 +739,11 @@ void yyerror(char *s) {
 
 int main(int argc, char*argv[]) {
     signal(SIGINT, sighandler);
+    sym = create_hash_table(tsize);
+    if (sym == NULL) {
+        print_error("Could not allocate memory for symbol table.");
+        exit(1);
+    }
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         if (yyin == NULL) {
@@ -740,6 +775,7 @@ int main(int argc, char*argv[]) {
                     printf("\n[Reached EOF]\n");
                     // Free dynamically allocated memory before exiting
                     free(line);
+                    free_table(sym);
                     // Close pipes before exiting
                     close(pipes[1]);
                     close(history_pipes[1]);

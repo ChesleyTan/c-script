@@ -47,49 +47,41 @@
 %x STRING_ARRAY_STATE
 
 INTEGER             (-)?[0-9]+
-BOOLEAN             true|false
 WHITESPACE          [ \t]
     /* ============= END DEFINITIONS ============= */
 
     /* ================== RULES ================== */
 %%
     /*================ Control Flow ===============*/
-"if"		return IF;
-"endif"		return ENDIF;
-"else"		return ELSE;
-"while"		return WHILE;
+"if"        return IF;
+"endif"     return ENDIF;
+"else"      return ELSE;
+"while"     return WHILE;
     /* ============================================*/
     /* ================ Comparators ===============*/
-">="		return GTE;
-"<="		return LTE;
-"=="		return EQL;
-"!="		return NEQ;
-"&&"		return AND;
-"||"		return OR;
+">="        return GTE;
+"<="        return LTE;
+"=="        return EQL;
+"!="        return NEQ;
+"&&"        return AND;
+"||"        return OR;
     /* ============================================*/
     /* ================ Booleans ==================*/
 
-{BOOLEAN}		{
-	#ifdef DEBUG
-	print_debug("Found boolean: %s", yytext );
-	#endif
-	if (strcmp( yytext, "true") == 0){
-		yylval.boolval = 1;
-	} else {
-		yylval.boolval = 0;
-	}
-	return BOOLEAN;
+(true|false)        {
+    #ifdef DEBUG
+    print_debug("Found boolean: %s", yytext );
+    #endif
+    if (strcmp( yytext, "true") == 0) {
+        yylval.boolval = 1;
+    }
+    else {
+        yylval.boolval = 0;
+    }
+    return BOOLEAN;
 
-				}
+                    }
     /* ============================================*/
-    /* ================ Variables ================ */
-[a-z]           {
-
-    yylval.intval = *yytext - 'a';
-    return VARIABLE;
-
-                }
-    /* =========================================== */
     /* ================ Integers ================= */
 {INTEGER}      {
 
@@ -303,6 +295,17 @@ WHITESPACE          [ \t]
     /* Non-greedy regex */
 <COMMENT>(("*"[^/])?|[^*])*     ;
 <COMMENT>"*/"                   { yy_pop_state(); }
+    /* =========================================== */
+    /* ================ Variables ================ */
+[a-z]+          {
+
+    yylval.varval = strdup(yytext);
+    #ifdef DEBUG
+    print_debug("Got variable: %s", yytext);
+    #endif
+    return VARIABLE;
+
+                }
     /* =========================================== */
     /* ============= Ignore whitespace =========== */
 {WHITESPACE}           ;
