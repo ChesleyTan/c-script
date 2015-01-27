@@ -102,7 +102,7 @@ statement:
                                     printf("{");
                                     int i = 0;
                                     while($1[i]) {
-                                        printf("%s", $1[i]);
+                                        printf("\"%s\"", $1[i]);
                                         free($1[i]);
                                         if ($1[++i]) {
                                             printf(", ");
@@ -130,56 +130,128 @@ statement:
          ;
 
 bool_expr:
-           BOOLEAN                  { $$ = $1; }
-         | bool_expr OR bool_expr   { $$ = $1 || $3; }
-         | expr OR bool_expr        { $$ = $1 || $3; }
-         | bool_expr OR expr        { $$ = $1 || $3; }
-         | expr OR expr             { $$ = $1 || $3; }
-         | bool_expr AND bool_expr  { $$ = $1 && $3; }
-         | expr AND bool_expr       { $$ = $1 && $3; }
-         | bool_expr AND expr       { $$ = $1 && $3; }
-         | expr AND expr            { $$ = $1 && $3; }
-         | bool_expr EQL bool_expr  { $$ = $1 == $3; }
-         | expr EQL bool_expr       { $$ = $1 == $3; }
-         | bool_expr EQL expr       { $$ = $1 == $3; }
-         | expr EQL expr            { $$ = $1 == $3; }
-         | expr '>' expr            { $$ = $1 > $3; }
-         | str_expr '>' str_expr    {
+           BOOLEAN                      { $$ = $1; }
+         | bool_expr OR bool_expr       { $$ = $1 || $3; }
+         | bool_expr OR expr            { $$ = $1 || $3; }
+         | bool_expr AND bool_expr      { $$ = $1 && $3; }
+         | bool_expr AND expr           { $$ = $1 && $3; }
+         | bool_expr EQL bool_expr      { $$ = $1 == $3; }
+         | bool_expr EQL expr           { $$ = $1 == $3; }
+         | bool_expr NEQ bool_expr      { $$ = $1 != $3; }
+         | bool_expr NEQ expr           { $$ = $1 != $3; }
+         | bool_expr '>' bool_expr      { $$ = $1 > $3; }
+         | bool_expr '>' expr           { $$ = $1 > $3; }
+         | bool_expr '<' bool_expr      { $$ = $1 < $3; }
+         | bool_expr '<' expr           { $$ = $1 < $3; }
+         | bool_expr GTE bool_expr      { $$ = $1 >= $3; }
+         | bool_expr GTE expr           { $$ = $1 >= $3; }
+         | bool_expr LTE bool_expr      { $$ = $1 <= $3; }
+         | bool_expr LTE expr           { $$ = $1 <= $3; }
+         | expr OR bool_expr            { $$ = $1 || $3; }
+         | expr OR expr                 { $$ = $1 || $3; }
+         | expr AND bool_expr           { $$ = $1 && $3; }
+         | expr AND expr                { $$ = $1 && $3; }
+         | expr EQL bool_expr           { $$ = $1 == $3; }
+         | expr EQL expr                { $$ = $1 == $3; }
+         | expr EQL float_expr          { $$ = $1 == $3; }
+         | expr NEQ bool_expr           { $$ = $1 != $3; }
+         | expr NEQ expr                { $$ = $1 != $3; }
+         | expr NEQ float_expr          { $$ = $1 != $3; }
+         | expr '>' expr                { $$ = $1 > $3; }
+         | expr '>' bool_expr           { $$ = $1 > $3; }
+         | expr '>' float_expr          { $$ = $1 > $3; }
+         | expr '<' expr                { $$ = $1 < $3; }
+         | expr '<' bool_expr           { $$ = $1 < $3; }
+         | expr '<' float_expr          { $$ = $1 < $3; }
+         | expr GTE expr                { $$ = $1 >= $3; }
+         | expr GTE bool_expr           { $$ = $1 >= $3; }
+         | expr GTE float_expr          { $$ = $1 >= $3; }
+         | expr LTE expr                { $$ = $1 <= $3; }
+         | expr LTE bool_expr           { $$ = $1 <= $3; }
+         | expr LTE float_expr          { $$ = $1 <= $3; }
+         | float_expr EQL float_expr    { $$ = $1 == $3; }
+         | float_expr EQL expr          { $$ = $1 == $3; }
+         | float_expr NEQ float_expr    { $$ = $1 != $3; }
+         | float_expr NEQ expr          { $$ = $1 != $3; }
+         | float_expr '>' float_expr    { $$ = $1 > $3; }
+         | float_expr '>' expr          { $$ = $1 > $3; }
+         | float_expr '<' float_expr    { $$ = $1 < $3; }
+         | float_expr '<' expr          { $$ = $1 < $3; }
+         | float_expr GTE float_expr    { $$ = $1 >= $3; }
+         | float_expr GTE expr          { $$ = $1 >= $3; }
+         | float_expr LTE float_expr    { $$ = $1 >= $3; }
+         | float_expr LTE expr          { $$ = $1 >= $3; }
+         | str_expr EQL str_expr        {
 
-                                    if(strcmp($1, $3)>0){
-                                        $$ = 1;
-                                    } else {
-                                        $$ = 0;
-                                    }
-                                    free($1);
-                                    free($3);
+            if (strcmp($1, $3) == 0) {
+                $$ = 1;
+            }
+            else {
+                $$ = 0;
+            }
+            free($1);
+            free($3);
 
-                                    }
-         | bool_expr '>' expr       { $$ = $1 > $3; }
-         | expr '>' bool_expr       { $$ = $1 > $3; }
-         | bool_expr '>' bool_expr  { $$ = $1 > $3; }
-         | expr '<' expr            { $$ = $1 < $3; }
-         | bool_expr '<' expr       { $$ = $1 < $3; }
-         | expr '<' bool_expr       { $$ = $1 < $3; }
-         | str_expr '<' str_expr    {
+                                        }
+         | str_expr NEQ str_expr        {
 
-                                    if(strcmp($3, $1)>0){
-                                        $$ = 1;
-                                    } else {
-                                        $$ = 0;
-                                    }
-                                    free($1);
-                                    free($3);
+            if (strcmp($1, $3) == 0) {
+                $$ = 0;
+            }
+            else {
+                $$ = 1;
+            }
+            free($1);
+            free($3);
 
-                                    }
-         | expr GTE expr            { $$ = $1 >= $3; }
-         | bool_expr GTE expr       { $$ = $1 >= $3; }
-         | expr GTE bool_expr       { $$ = $1 >= $3; }
-         | bool_expr GTE bool_expr  { $$ = $1 >= $3; }
-         | expr LTE expr            { $$ = $1 <= $3; }
-         | bool_expr LTE expr       { $$ = $1 <= $3; }
-         | expr LTE bool_expr       { $$ = $1 <= $3; }
-         | bool_expr LTE bool_expr  { $$ = $1 <= $3; }
+                                        }
+         | str_expr '>' str_expr        {
+
+            if(strcmp($1, $3)>0){
+                $$ = 1;
+            }
+            else {
+                $$ = 0;
+            }
+            free($1);
+            free($3);
+
+                                        }
+         | str_expr '<' str_expr        {
+
+            if(strcmp($3, $1)>0){
+                $$ = 1;
+            } else {
+                $$ = 0;
+            }
+            free($1);
+            free($3);
+
+                                        }
+         | str_expr GTE str_expr        {
+
+            if (strcmp($1, $3) >= 0) {
+                $$ = 1;
+            }
+            else {
+                $$ = 0;
+            }
+            free($1);
+            free($3);
+
+                                        }
+         | str_expr LTE str_expr        {
+
+            if (strcmp($1, $3) <= 0) {
+                $$ = 1;
+            }
+            else {
+                $$ = 0;
+            }
+            free($1);
+            free($3);
+
+                                        }
 
 expr:
            INTEGER                  { $$ = $1; }
@@ -635,6 +707,28 @@ int_array_expr:
         ;
 str_array_expr:
                 STRING_ARRAY                       { $$ = $1; }
+              | str_expr '/' str_expr           {
+
+                    char **arr = (char **) malloc(sizeof(char *) * 3);
+                    char *tok = strsep(&$1, $3);
+                    if ($1 != NULL) {
+                        arr[0] = strdup(tok);
+                        arr[1] = strdup($1);
+                        arr[2] = NULL;
+                        free(tok);
+                        $$ = arr;
+                        free($3);
+                    }
+                    else {
+                        arr[0] = strdup(tok);
+                        arr[1] = NULL;
+                        arr[2] = NULL;
+                        free(tok);
+                        $$ = arr;
+                        free($3);
+                    }
+
+                                                }
 %%
     /* ================ END RULES ================ */
 

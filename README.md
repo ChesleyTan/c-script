@@ -18,15 +18,28 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 ####REPL with navigation and command history
 ####String operations
 * Get element at index
-* Substring
+* Substring/Reversing
 * Find substring
-* Reversing
 * Slicing
 * Concatenation
-* Subtraction
+* Subtraction (remove substring)
 * Multiplication
+* String division (split on token)
 * Integer to string coercion
 * String length
+
+####Integer Arrays
+* Array get element at index
+* Array-array concatenation
+* Array-element concatenation
+* Array-element subtraction
+* Array multiplication
+* Array length
+
+####String Arrays
+* Array get element at index
+* Array length
+* Result of string division
 
 ####Integer arithmetic with order of operations
 * Modulus operation
@@ -42,11 +55,16 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 * Boolean comparison: `&&, ||`
 * String Comparison: `>, >=, <, <=, ==, !=`
 
+####Variables
+* Storing integer values in variables
+
 ##File List
 src/lang.lex  
 src/lang.y  
 src/utils.c  
 src/utils.h  
+src/hash.c  
+src/hash.h  
 src/Makefile  
 LICENSE  
 README.md  

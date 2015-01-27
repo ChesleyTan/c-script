@@ -297,7 +297,7 @@ WHITESPACE          [ \t]
 <COMMENT>"*/"                   { yy_pop_state(); }
     /* =========================================== */
     /* ================ Variables ================ */
-[a-z]+          {
+[A-Za-z]+          {
 
     yylval.varval = strdup(yytext);
     #ifdef DEBUG
