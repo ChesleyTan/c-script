@@ -3,20 +3,20 @@
 
 /* Credits to http://www.sparknotes.com/cs/searching/hashtables/section3.rhtml
  * for tutorial on implementing a hash table in C */
-hash_table_t * create_hash_table(int size) {
-    hash_table_t *new_table;
+hash_table * create_hash_table(int size) {
+    hash_table *new_table;
 
     /* Check for invalid size */
     if (size<1)
         return NULL;
 
     /* Allocate memory for the table structure */
-    if ((new_table = malloc(sizeof(hash_table_t))) == NULL) {
+    if ((new_table = malloc(sizeof(hash_table))) == NULL) {
         return NULL;
     }
 
     /* Attempt to allocate memory for the table itself */
-    if ((new_table->table = malloc(sizeof(list_t) * size)) == NULL) {
+    if ((new_table->table = malloc(sizeof(linked_list) * size)) == NULL) {
         return NULL;
     }
 
@@ -30,7 +30,7 @@ hash_table_t * create_hash_table(int size) {
     return new_table;
 }
 
-unsigned int hash(hash_table_t *hashtable, char *str) {
+unsigned int hash(hash_table *hashtable, char *str) {
     unsigned int hashval = 0;
 
     for (;*str != '\0';++str) {
@@ -41,8 +41,8 @@ unsigned int hash(hash_table_t *hashtable, char *str) {
     return hashval % hashtable->size;
 }
 
-list_t *lookup(hash_table_t *hashtable, char *str) {
-    list_t *list;
+linked_list *lookup(hash_table *hashtable, char *str) {
+    linked_list *list;
     unsigned int hashval = hash(hashtable, str);
 
     for(list = hashtable->table[hashval]; list != NULL; list = list->next) {
@@ -54,13 +54,13 @@ list_t *lookup(hash_table_t *hashtable, char *str) {
 }
 
 
-int add(hash_table_t *hashtable, char *str) {
-    list_t *new_list;
-    list_t *current_list;
+int add(hash_table *hashtable, char *str) {
+    linked_list *new_list;
+    linked_list *current_list;
     unsigned int hashval = hash(hashtable, str);
 
     /* Allocate memory for a new linked list */
-    new_list = malloc(sizeof(list_t));
+    new_list = malloc(sizeof(linked_list));
     if (new_list == NULL) {
         return 1;
     }
@@ -78,14 +78,14 @@ int add(hash_table_t *hashtable, char *str) {
     return 0;
 }
 
-void free_table(hash_table_t *hashtable) {
+void free_table(hash_table *hashtable) {
 
     if (hashtable == NULL) {
         return;
     }
 
     int i;
-    list_t *list, *temp;
+    linked_list *list, *temp;
 
     /* 
      * Free each item in the table

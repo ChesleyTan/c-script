@@ -60,8 +60,8 @@ WHITESPACE          [ \t]
 "while"     return WHILE;
     /* ============================================*/
     /* ================ Comparators ===============*/
-[^>]">"[^>=]     return GT;
-[^<]"<"[^<=]     return LT;
+[^>]">"[^>=]    return GT;
+[^<]"<"[^<=]    return LT;
 ">="            return GTE;
 "<="            return LTE;
 "=="            return EQL;

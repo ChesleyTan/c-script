@@ -37,8 +37,8 @@
     extern FILE * yyin;
     extern int yylineno;
 
-    int tsize = 50;
-    hash_table_t *sym;
+    int table_size = 50;
+    hash_table *sym;
 
     char keep_alive = 1;
     char input[INPUT_BUF_SIZE];
@@ -70,8 +70,8 @@
 %type <varval> VARIABLE
 %type <str_arrayval> STRING_ARRAY
 %type <str_arrayval> str_array_expr
-%type <intval> expr
 %type <intval> INTEGER
+%type <intval> expr
 %type <int_arrayval> INT_ARRAY
 %type <int_arrayval> int_array_expr
 %type <floatval> FLOAT
@@ -121,7 +121,7 @@ statement:
             if (response == 1) {
                 print_error("Ran out of memory.");
             }
-            list_t *res = lookup(sym, $1);
+            linked_list *res = lookup(sym, $1);
             #ifdef DEBUG
             if (res == NULL) {
                 print_debug("Something went wrong in the hash table lookup");
@@ -261,7 +261,7 @@ expr:
            INTEGER                  { $$ = $1; }
          | VARIABLE                 {
 
-            list_t *res = lookup(sym, $1);
+            linked_list *res = lookup(sym, $1);
             if (res == NULL) {
                 print_error("Variable has not been initialized.");
                 $$ = 0;
@@ -998,7 +998,7 @@ void yyerror(char *s) {
 
 int main(int argc, char*argv[]) {
     signal(SIGINT, sighandler);
-    sym = create_hash_table(tsize);
+    sym = create_hash_table(table_size);
     if (sym == NULL) {
         print_error("Could not allocate memory for symbol table.");
         exit(1);
