@@ -29,7 +29,7 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 * String length `#(100 * "a")`
 
 ####Integer Arrays
-* Array get element at index `arr[index]`
+* Array get element at index `{1, 3, 4}[2]`
 * Array-array concatenation `{1, 2, 3} + {4, 5, 6}`
 * Array-element concatenation `{1, 2, 3} + 4 + 5 + 6`
 * Array-element subtraction `{1, 2, 3} - 3 - 2 - 1`
