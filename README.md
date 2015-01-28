@@ -61,8 +61,6 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 ####Variables
 * Storing integer values in variables `thisIsAVariable = 9`
 
-##
-
 ##File List
 src/lang.lex  
 src/lang.y  
@@ -71,6 +69,7 @@ src/utils.h
 src/hash.c  
 src/hash.h  
 src/Makefile  
+tests/tests.gcz  
 LICENSE  
 README.md  
 TODO.md  

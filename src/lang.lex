@@ -60,12 +60,14 @@ WHITESPACE          [ \t]
 "while"     return WHILE;
     /* ============================================*/
     /* ================ Comparators ===============*/
-">="        return GTE;
-"<="        return LTE;
-"=="        return EQL;
-"!="        return NEQ;
-"&&"        return AND;
-"||"        return OR;
+[^>]">"[^>]     return GT;
+[^<]"<"[^<]     return LT;
+">="            return GTE;
+"<="            return LTE;
+"=="            return EQL;
+"!="            return NEQ;
+"&&"            return AND;
+"||"            return OR;
     /* ============================================*/
     /* ================ Booleans ==================*/
 

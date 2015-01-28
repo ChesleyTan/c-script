@@ -1,12 +1,13 @@
     /* =============== DEFINITIONS ============= */
 %token BOOLEAN INTEGER FLOAT VARIABLE STRING INT_ARRAY STRING_ARRAY
-%token IF ENDIF ELSE WHILE GTE LTE EQL NEQ AND OR
+%token IF ENDIF ELSE WHILE GT LT GTE LTE EQL NEQ AND OR
     /* Left-associative operator precedence */
-%left '+' '-'
-%right '%' '#'
 %left AND OR
 %left EQL NEQ
+%left GT LT
 %left GTE LTE
+%left '+' '-'
+%left '%' '#'
 %left '*' '/' '<' '>' '|' '^'
 %left '(' ')' '[' ']' '{' '}'
     /* Right-associative operator precedence */
@@ -142,10 +143,10 @@ bool_expr:
          | bool_expr EQL expr           { $$ = $1 == $3; }
          | bool_expr NEQ bool_expr      { $$ = $1 != $3; }
          | bool_expr NEQ expr           { $$ = $1 != $3; }
-         | bool_expr '>' bool_expr      { $$ = $1 > $3; }
-         | bool_expr '>' expr           { $$ = $1 > $3; }
-         | bool_expr '<' bool_expr      { $$ = $1 < $3; }
-         | bool_expr '<' expr           { $$ = $1 < $3; }
+         | bool_expr GT bool_expr       { $$ = $1 > $3; }
+         | bool_expr GT expr            { $$ = $1 > $3; }
+         | bool_expr LT bool_expr       { $$ = $1 < $3; }
+         | bool_expr LT expr            { $$ = $1 < $3; }
          | bool_expr GTE bool_expr      { $$ = $1 >= $3; }
          | bool_expr GTE expr           { $$ = $1 >= $3; }
          | bool_expr LTE bool_expr      { $$ = $1 <= $3; }
@@ -160,12 +161,12 @@ bool_expr:
          | expr NEQ bool_expr           { $$ = $1 != $3; }
          | expr NEQ expr                { $$ = $1 != $3; }
          | expr NEQ float_expr          { $$ = $1 != $3; }
-         | expr '>' expr                { $$ = $1 > $3; }
-         | expr '>' bool_expr           { $$ = $1 > $3; }
-         | expr '>' float_expr          { $$ = $1 > $3; }
-         | expr '<' expr                { $$ = $1 < $3; }
-         | expr '<' bool_expr           { $$ = $1 < $3; }
-         | expr '<' float_expr          { $$ = $1 < $3; }
+         | expr GT expr                 { $$ = $1 > $3; }
+         | expr GT bool_expr            { $$ = $1 > $3; }
+         | expr GT float_expr           { $$ = $1 > $3; }
+         | expr LT expr                 { $$ = $1 < $3; }
+         | expr LT bool_expr            { $$ = $1 < $3; }
+         | expr LT float_expr           { $$ = $1 < $3; }
          | expr GTE expr                { $$ = $1 >= $3; }
          | expr GTE bool_expr           { $$ = $1 >= $3; }
          | expr GTE float_expr          { $$ = $1 >= $3; }
@@ -176,10 +177,10 @@ bool_expr:
          | float_expr EQL expr          { $$ = $1 == $3; }
          | float_expr NEQ float_expr    { $$ = $1 != $3; }
          | float_expr NEQ expr          { $$ = $1 != $3; }
-         | float_expr '>' float_expr    { $$ = $1 > $3; }
-         | float_expr '>' expr          { $$ = $1 > $3; }
-         | float_expr '<' float_expr    { $$ = $1 < $3; }
-         | float_expr '<' expr          { $$ = $1 < $3; }
+         | float_expr GT float_expr     { $$ = $1 > $3; }
+         | float_expr GT expr           { $$ = $1 > $3; }
+         | float_expr LT float_expr     { $$ = $1 < $3; }
+         | float_expr LT expr           { $$ = $1 < $3; }
          | float_expr GTE float_expr    { $$ = $1 >= $3; }
          | float_expr GTE expr          { $$ = $1 >= $3; }
          | float_expr LTE float_expr    { $$ = $1 >= $3; }
@@ -208,7 +209,7 @@ bool_expr:
             free($3);
 
                                         }
-         | str_expr '>' str_expr        {
+         | str_expr GT str_expr         {
 
             if(strcmp($1, $3)>0){
                 $$ = 1;
@@ -220,7 +221,7 @@ bool_expr:
             free($3);
 
                                         }
-         | str_expr '<' str_expr        {
+         | str_expr LT str_expr         {
 
             if(strcmp($3, $1)>0){
                 $$ = 1;
