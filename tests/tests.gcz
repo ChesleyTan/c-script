@@ -25,3 +25,4 @@
 3.14159 % 1.4142
 3.14159 ** 0.5
 thisIsAVariable = 9
+thisIsAVariable = "Tro" + 100 * "lo"

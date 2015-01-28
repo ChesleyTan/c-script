@@ -60,6 +60,7 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 
 ####Variables
 * Storing integer values in variables `thisIsAVariable = 9`
+* Storing string values in variables `thisIsAVariable = "Tro" + 100 * "lo"`
 
 ##File List
 src/lang.lex  
