@@ -5,12 +5,17 @@ WARNINGS=$(WARNINGS_QUIET)
 C_FILES=lex.yy.c lang.tab.c utils.c hash.c
 LIBS=-lm -lreadline
 all:
-	bison -d lang.y
-	flex lang.lex
-	gcc $(DEBUG) $(WARNINGS) $(C_FILES) -o lang $(LIBS)
+	@bison -d lang.y
+	@flex lang.lex
+	@mkdir -p ../bin
+	@gcc $(DEBUG) $(WARNINGS) $(C_FILES) -o ../bin/lang $(LIBS)
 	@make clean
 clean:
-	@rm lang.tab.*
-	@rm lex.yy.c
+	@rm -f lang.tab.c lang.tab.h
+	@rm -f lex.yy.c
 valgrind: all
-	valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --track-fds=yes ./lang
+	valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all --track-fds=yes ../bin/lang
+run: all
+	../bin/lang
+tests: all
+	../bin/lang ../tests/tests.gcz

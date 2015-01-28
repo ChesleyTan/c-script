@@ -15,6 +15,7 @@
     int buf_resize(size_t);
     int int_buf_resize(size_t);
     int str_buf_resize(size_t);
+    void restore_initial_state();
     char *buf;
     size_t buf_size = 0;
     size_t buf_index = 0;
@@ -165,7 +166,9 @@ WHITESPACE          [ \t]
         print_error("String not terminated: '%s'", buf);
         YY_FLUSH_BUFFER;
         /* Restore initial state */
-        yy_pop_state();
+        restore_initial_state();
+        /* Reset string buffer */
+        buf_ready = 0;
     }
 
                     }
@@ -224,7 +227,7 @@ WHITESPACE          [ \t]
 
         print_error("Integer array not terminated.");
         /* Restore initial state */
-        yy_pop_state();
+        restore_initial_state();
 
                         }
 <INT_ARRAY_STATE>,[ ]?          ;
@@ -238,6 +241,7 @@ WHITESPACE          [ \t]
     print_debug("Found string array start: %s", yytext);
     #endif
     yy_push_state(STRING_ARRAY_STATE);
+    str_buf_index = 0;
 
                             }
 <STRING_ARRAY_STATE>"\}"    {
@@ -268,7 +272,9 @@ WHITESPACE          [ \t]
         print_error("String array not terminated.");
         YY_FLUSH_BUFFER;
         /* Restore initial state */
-        yy_pop_state();
+        restore_initial_state();
+        /* Reset string buffer */
+        buf_ready = 0;
 
                             }
 <STRING_ARRAY_STATE>,[ ]?   {
@@ -397,5 +403,11 @@ int str_buf_resize(size_t size_change) {
         }
     }
     return 0;
+}
+void restore_initial_state() {
+    while (yy_top_state() != INITIAL) {
+        yy_pop_state();
+    }
+    yy_pop_state();
 }
     /* ============= END SUBROUTINES ============= */

@@ -16,6 +16,8 @@
 #({1, 2, 3} * 100)
 {"Hello", "World"}[1]
 {"Welcome", "To", "My"} + "Home" + "Stranger"
+{"World"} + {"All", "Cow", "Data", "Oink"} + "Pig"
+3 * {"hello"} + "world"
 #{"Hello", "World!"}
 #"Mary had a little lamb" / "little"
 15 % 7

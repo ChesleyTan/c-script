@@ -680,7 +680,7 @@ int_array_expr:
         }
 
                                                     }
-              | int_array_expr '*' expr   {
+              | int_array_expr '*' expr             {
 
         if ($3 >= 0) {
             int *i = (int *) malloc(sizeof(int) * (($1[0] - 1) * $3 + 1));
@@ -706,6 +706,35 @@ int_array_expr:
         else {
             print_error("Cannot multiply array by negative integer.");
             $$ = $1;
+        }
+
+                                                    }
+              | expr '*' int_array_expr             {
+
+        if ($1 >= 0) {
+            int *i = (int *) malloc(sizeof(int) * (($3[0] - 1) * $1 + 1));
+            if (i != NULL) {
+                int mult = 0;
+                int p = 0;
+                i[0] = ($3[0] - 1) * $1 + 1;
+                printf("New array of size %d\n", i[0]);
+                while (++mult <= $1) {
+                    int q;
+                    for (q = 1;q < $3[0];++q) {
+                        i[++p] = $3[q];
+                    }
+                }
+                free($3);
+                $$ = i;
+            }
+            else {
+                print_error("Out of memory.");
+                $$ = $3;
+            }
+        }
+        else {
+            print_error("Cannot multiply array by negative integer.");
+            $$ = $3;
         }
 
                                                     }
@@ -742,7 +771,6 @@ str_array_expr:
               | str_array_expr '+' str_expr     {
 
                 int len = str_arrlen($1);
-                printf("Length: %d\n", len);
                 char **new_ptr = (char **) realloc($1, sizeof(char *) *
                     (len + 2));
                 if (new_ptr != NULL) {
@@ -758,6 +786,110 @@ str_array_expr:
                 }
 
                                                 }
+              | str_array_expr '+' str_array_expr       {
+
+                int len1 = str_arrlen($1);
+                int len2 = str_arrlen($3);
+                char **new_ptr = (char **) realloc($1, sizeof(char *) *
+                    (len1 + len2 + 1));
+                if (new_ptr != NULL) {
+                    $1 = new_ptr;
+                    int i = 0;
+                    while (i < len2) {
+                        $1[len1 + i] = $3[i];
+                        ++i;
+                    }
+                    $1[len1 + len2] = NULL;
+                    $$ = $1;
+                    free($3);
+                }
+                else {
+                    print_error("Out of memory.");
+                    $$ = $1;
+                    free($3);
+                }
+
+                                                        }
+              | str_array_expr '*' expr                 {
+
+                if ($3 > 1) {
+                    int len = str_arrlen($1);
+                    char **new_ptr = (char **) realloc($1, sizeof(char *) *
+                        (len * $3 + 1));
+                    if (new_ptr != NULL) {
+                        $1 = new_ptr;
+                        int mult = 0;
+                        int p = len;
+                        while (++mult < $3) {
+                            int i;
+                            for (i = 0;i < len;++i) {
+                                $1[p] = strdup($1[i]);
+                                ++p;
+                            }
+                        }
+                        $1[p] = NULL;
+                        $$ = $1;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $1;
+                    }
+                }
+                else if ($3 == 1) {
+                    $$ = $1;
+                }
+                else {
+                    char **new_ptr = (char **) realloc($1, sizeof(char *));
+                    if (new_ptr != NULL) {
+                        new_ptr[0] = NULL;
+                        $$ = new_ptr;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $1;
+                    }
+                }
+                                                        }
+              | expr '*' str_array_expr                 {
+
+                if ($1 > 1) {
+                    int len = str_arrlen($3);
+                    char **new_ptr = (char **) realloc($3, sizeof(char *) *
+                        (len * $1 + 1));
+                    if (new_ptr != NULL) {
+                        $3 = new_ptr;
+                        int mult = 0;
+                        int p = len;
+                        while (++mult < $1) {
+                            int i;
+                            for (i = 0;i < len;++i) {
+                                $3[p] = strdup($3[i]);
+                                ++p;
+                            }
+                        }
+                        $3[p] = NULL;
+                        $$ = $3;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $3;
+                    }
+                }
+                else if ($1 == 1) {
+                    $$ = $3;
+                }
+                else {
+                    char **new_ptr = (char **) realloc($3, sizeof(char *));
+                    if (new_ptr != NULL) {
+                        new_ptr[0] = NULL;
+                        $$ = new_ptr;
+                    }
+                    else {
+                        print_error("Out of memory.");
+                        $$ = $3;
+                    }
+                }
+                                                        }
 %%
     /* ================ END RULES ================ */
 
