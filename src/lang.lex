@@ -7,11 +7,14 @@
     #include <sys/types.h>
 
     #include "utils.h"
+    #include "hash.h"
     #include "lang.tab.h"
 
     #define ERRMSG_LENGTH 100
 
     void yyerror(char *);
+    extern hash_table *sym;
+
     int buf_resize(size_t);
     int int_buf_resize(size_t);
     int str_buf_resize(size_t);
@@ -314,7 +317,25 @@ WHITESPACE          [ \t]
     #ifdef DEBUG
     print_debug("Got variable: %s", yytext);
     #endif
-    return VARIABLE;
+    linked_list *res = lookup(sym, yytext);
+    #ifdef DEBUG
+    if (res != NULL) {
+        print_debug("Got variable recall: %s", yytext);
+    }
+    #endif
+    if (res != NULL) {
+        switch (res->type) {
+            case INTEGER_VALUE:
+                return INT_VARIABLE;
+            case STRING_VALUE:
+                return STR_VARIABLE;
+            default:
+                return INT_VARIABLE;
+        }
+    }
+    else {
+        return VARIABLE;
+    }
 
                 }
     /* =========================================== */

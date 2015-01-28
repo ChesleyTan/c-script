@@ -1,5 +1,6 @@
     /* =============== DEFINITIONS ============= */
-%token BOOLEAN INTEGER FLOAT VARIABLE STRING INT_ARRAY STRING_ARRAY
+%token BOOLEAN INTEGER FLOAT STRING INT_ARRAY STRING_ARRAY
+%token VARIABLE INT_VARIABLE STR_VARIABLE
 %token IF ENDIF ELSE WHILE GT LT GTE LTE EQL NEQ AND OR
     /* Left-associative operator precedence */
 %left AND OR
@@ -50,7 +51,12 @@
     static void readline_sigint_handler();
     static void sighandler(int signo);
     char * substring(char *str, int b1, int b2, int step);
+    void assign_int(char *var, int val);
+    void assign_str(char *var, char *val);
 
+    #ifdef DEBUG
+    #define YYDEBUG 1
+    #endif
 %}
 
 %union {
@@ -68,6 +74,8 @@
 %type <strval> STRING
 %type <strval> str_expr
 %type <varval> VARIABLE
+%type <varval> INT_VARIABLE
+%type <varval> STR_VARIABLE
 %type <str_arrayval> STRING_ARRAY
 %type <str_arrayval> str_array_expr
 %type <intval> INTEGER
@@ -115,22 +123,13 @@ statement:
                                     printf("}\n");
                                     free($1);
                                 }
-         | VARIABLE '=' expr    {
-
-            int response = add(sym, $1);
-            if (response == 1) {
-                print_error("Ran out of memory.");
-            }
-            linked_list *res = lookup(sym, $1);
-            #ifdef DEBUG
-            if (res == NULL) {
-                print_debug("Something went wrong in the hash table lookup");
-            }
-            #endif
-            res->i = $3;
-            free($1);
-
-                                }
+         | VARIABLE                     {
+            print_error("Variable has not been initialized.");
+                                        }
+         | VARIABLE '=' expr            { assign_int($1, $3); }
+         | INT_VARIABLE '=' expr        { assign_int($1, $3); }
+         | VARIABLE '=' str_expr        { assign_str($1, $3); }
+         | STR_VARIABLE '=' str_expr    { assign_str($1, $3); }
          ;
 
 bool_expr:
@@ -259,16 +258,10 @@ bool_expr:
 
 expr:
            INTEGER                  { $$ = $1; }
-         | VARIABLE                 {
+         | INT_VARIABLE             {
 
             linked_list *res = lookup(sym, $1);
-            if (res == NULL) {
-                print_error("Variable has not been initialized.");
-                $$ = 0;
-            }
-            else {
-                $$=res->i;
-            }
+            $$=res->i;
             free($1);
                                     }
          | expr '+' expr            { $$ = $1 + $3; }
@@ -340,6 +333,12 @@ expr:
          ;
 str_expr:
            STRING                   { $$ = $1; }
+         | STR_VARIABLE             {
+
+            linked_list *res = lookup(sym, $1);
+            $$ = strdup(res->s);
+            free($1);
+                                    }
          | str_expr '+' str_expr    {
 
             char *s = (char *) malloc(sizeof(char) *
@@ -1106,5 +1105,40 @@ int main(int argc, char*argv[]) {
         }
     }
     return 0;
+}
+void assign_int(char *var, int val) {
+    int response = add(sym, var);
+    if (response == 1) {
+        print_error("Ran out of memory.");
+    }
+    linked_list *res = lookup(sym, var);
+    #ifdef DEBUG
+    if (res == NULL) {
+        print_debug("Something went wrong in the hash table lookup");
+    }
+    #endif
+    res->i = val;
+    res->type = INTEGER_VALUE;
+    free(var);
+}
+void assign_str(char *var, char *val) {
+    int response = add(sym, var);
+    if (response == 1) {
+        print_error("Ran out of memory.");
+    }
+    linked_list *res = lookup(sym, var);
+    #ifdef DEBUG
+    if (res == NULL) {
+        print_debug("Something went wrong in the hash table lookup");
+    }
+    #endif
+    /* If reassigning, free the old value */
+    if (response == 2) {
+        free(res->s);
+    }
+    res->s = strdup(val);
+    res->type = STRING_VALUE;
+    free(var);
+    free(val);
 }
     /* ============= END SUBROUTINES ============= */

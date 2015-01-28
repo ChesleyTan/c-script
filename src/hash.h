@@ -4,8 +4,14 @@
 
 /* Credits to http://www.sparknotes.com/cs/searching/hashtables/section3.rhtml
  * for tutorial on implementing a hash table in C */
+typedef enum {
+    STRING_VALUE,
+    INTEGER_VALUE
+} varType;
 typedef struct _linked_list {
-    char *str;
+    varType type;
+    char *varName;
+    char *s;
     int i;
     struct _linked_list *next;
 } linked_list;
