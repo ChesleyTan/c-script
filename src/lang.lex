@@ -18,7 +18,7 @@
     char *buf;
     size_t buf_size = 0;
     size_t buf_index = 0;
-    char buf_pushed = 0;
+    char buf_ready = 0;
     /*
      * NOTE: int arrays are delimited with their size (inclusive of the 0 index)
      * at index 0
@@ -110,7 +110,7 @@ WHITESPACE          [ \t]
 
     yy_push_state(STRING_STATE);
     buf_index = 0;
-    buf_pushed = 0;
+    buf_ready = 0;
 
                                         }
 <STRING_STATE>\\n   {
@@ -148,8 +148,11 @@ WHITESPACE          [ \t]
         yy_pop_state();
         if (previous_state != STRING_ARRAY_STATE) {
             yylval.strval = strdup(buf);
-            buf_pushed = 1;
+            buf_ready = 0;
             return STRING;
+        }
+        else {
+            buf_ready = 1;
         }
     }
 
@@ -242,14 +245,14 @@ WHITESPACE          [ \t]
     if (str_buf_resize(1) != -1) {
         #ifdef DEBUG
         print_debug("Found string array end: %s", yytext);
-        if (buf_pushed == 0) {
+        if (buf_ready) {
             print_debug("Found string array element '%s'", buf);
         }
         #endif
-        if (buf_pushed == 0 && str_buf_index != 0) {
+        if (buf_ready) {
             char *s = strdup(buf);
             str_buf[str_buf_index++] = s;
-            buf_pushed = 1;
+            buf_ready = 0;
         }
         str_buf[str_buf_index] = NULL;
         yylval.str_arrayval = str_arrdup(str_buf, str_buf_index + 1);
@@ -272,14 +275,14 @@ WHITESPACE          [ \t]
 
     if (str_buf_resize(1) != -1) {
         #ifdef DEBUG
-        if (buf_pushed == 0) {
+        if (buf_ready) {
             print_debug("Found string array element '%s'", buf);
         }
         #endif
-        if (buf_pushed == 0 && str_buf_index != 0) {
+        if (buf_ready) {
             char *s = strdup(buf);
             str_buf[str_buf_index++] = s;
-            buf_pushed = 1;
+            buf_ready = 0;
         }
     }
 

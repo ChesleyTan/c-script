@@ -38,6 +38,7 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 
 ####String Arrays
 * Array get element at index `{"Hello", "World"}[1]`
+* Array-element concatenation `{"Welcome", "To", "My"} + "Home" + "Stranger"`
 * Array length `#{"Hello", "World!"}`
 * Result of string division `#"Mary had a little lamb" / "little"`
 

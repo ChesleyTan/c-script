@@ -739,6 +739,25 @@ str_array_expr:
                     }
 
                                                 }
+              | str_array_expr '+' str_expr     {
+
+                int len = str_arrlen($1);
+                printf("Length: %d\n", len);
+                char **new_ptr = (char **) realloc($1, sizeof(char *) *
+                    (len + 2));
+                if (new_ptr != NULL) {
+                    $1 = new_ptr;
+                    $1[len] = $3;
+                    $1[len + 1] = NULL;
+                    $$ = $1;
+                }
+                else {
+                    print_error("Out of memory.");
+                    $$ = $1;
+                    free($3);
+                }
+
+                                                }
 %%
     /* ================ END RULES ================ */
 
