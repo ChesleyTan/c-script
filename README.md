@@ -8,8 +8,9 @@ C-Script
 ## About
 This project was written as a final project for the Fall 2014 Systems Level Programming class (4th period) at Stuyvesant High School
 ##Building the Project
-1. Install the GNU Readline Library  
-2. Run `$ make`  
+1. Make sure you have the Bison Parser Generator and the Flex Lexical Analyzer installed on your computer  
+2. Install the GNU Readline Library  
+3. Run `$ make`  
 
 ##Running the Project
 1. Run `$ ./lang <file>` or alternatively `$ ./lang` for an interactive shell  
