@@ -17,38 +17,38 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 ##Features
 ####REPL with navigation and command history
 ####String operations
-* Get element at index
-* Substring/Reversing
-* Find substring
-* Slicing
-* Concatenation
-* Subtraction (remove substring)
-* Multiplication
-* String division (split on token)
-* Integer to string coercion
-* String length
+* Get element at index `"HelloWorld!"[-1]`
+* Substring/Reversing `"Reverse this"[-1:0:1]`
+* Find substring `"Mary had a little lamb"["had"]`
+* Slicing `"Slice this"[::2]`
+* Concatenation `"Hello" + " World`
+* Subtraction (remove substring) `"Mary had a little lamb" - "little "`
+* Multiplication `"Tro" + 1000 * "lo"`
+* String division (split on letter) `"I'd just like to interject for a moment." / "interject"`
+* Integer to string coercion `1 + "33" + 7`
+* String length `#(100 * "a")`
 
 ####Integer Arrays
-* Array get element at index
-* Array-array concatenation
-* Array-element concatenation
-* Array-element subtraction
-* Array multiplication
-* Array length
+* Array get element at index `arr[index]`
+* Array-array concatenation `{1, 2, 3} + {4, 5, 6}`
+* Array-element concatenation `{1, 2, 3} + 4 + 5 + 6`
+* Array-element subtraction `{1, 2, 3} - 3 - 2 - 1`
+* Array multiplication `{1, 2, 3} * 100`
+* Array length `#({1, 2, 3} * 100)`
 
 ####String Arrays
-* Array get element at index
-* Array length
-* Result of string division
+* Array get element at index `{"Hello", "World"}[1]`
+* Array length `#{"Hello", "World!"}`
+* Result of string division `#"Mary had a little lamb" / "little"`
 
 ####Integer arithmetic with order of operations
-* Modulus operation
-* Exponent operation
+* Modulus operation `15 % 7`
+* Exponent operation `15 ** 7`
 * Bitwise operations: `^, |, <<, >>`
 
 ####Floating point arithmetic with order of operations
-* Modulus operation
-* Exponent operation
+* Modulus operation `3.14159 % 1.4142`
+* Exponent operation `3.14159 ** 0.5`
 
 ####Boolean operations
 * Number Comparison: `>, >=, <, <=, ==, !=`
@@ -56,7 +56,9 @@ This project was written as a final project for the Fall 2014 Systems Level Prog
 * String Comparison: `>, >=, <, <=, ==, !=`
 
 ####Variables
-* Storing integer values in variables
+* Storing integer values in variables `thisIsAVariable = 9`
+
+##
 
 ##File List
 src/lang.lex  

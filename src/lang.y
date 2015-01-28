@@ -31,6 +31,7 @@
     #define SIGINT_EXIT_CODE 11
 
     void yyerror(char *);
+    void yyrestart(FILE *);
     int yylex(void);
     extern FILE * yyin;
     extern int yylineno;
@@ -42,6 +43,8 @@
     char input[INPUT_BUF_SIZE];
     int rl_child_pid;
     const char *prompt = ">> ";
+    int pipes[2];
+    int history_pipes[2];
 
     static void readline_sigint_handler();
     static void sighandler(int signo);
@@ -561,6 +564,9 @@ float_expr:
          | float_expr '*' float_expr        { $$ = $1 * $3; }
          | float_expr '*' expr              { $$ = $1 * $3; }
          | expr '*' float_expr              { $$ = $1 * $3; }
+         | float_expr '%' float_expr        { $$ = fmodf($1, $3); }
+         | float_expr '%' expr              { $$ = fmodf($1, $3); }
+         | expr '%' float_expr              { $$ = fmodf($1, $3); }
          | float_expr '/' float_expr        {
 
             if ($3 != 0)
@@ -710,20 +716,24 @@ str_array_expr:
               | str_expr '/' str_expr           {
 
                     char **arr = (char **) malloc(sizeof(char *) * 3);
-                    char *tok = strsep(&$1, $3);
-                    if ($1 != NULL) {
-                        arr[0] = strdup(tok);
-                        arr[1] = strdup($1);
+                    char *ptr = strstr($1, $3);
+                    if (ptr != NULL && strcmp($3, "") != 0) {
+                        arr[0] = (char *) malloc(sizeof(char) * (ptr - $1 + 1));
+                        strncpy(arr[0], $1, ptr - $1);
+                        arr[0][ptr - $1] = '\0';
+                        int len = strlen($3);
+                        arr[1] = (char *) malloc(sizeof(char) * (strlen($1) -
+                            len - (ptr - $1) + 1));
+                        strcpy(arr[1], ptr + len);
                         arr[2] = NULL;
-                        free(tok);
                         $$ = arr;
+                        free($1);
                         free($3);
                     }
                     else {
-                        arr[0] = strdup(tok);
+                        arr[0] = $1;
                         arr[1] = NULL;
                         arr[2] = NULL;
-                        free(tok);
                         $$ = arr;
                         free($3);
                     }
@@ -757,7 +767,7 @@ char * substring(char *str, int b1, int b2, int step) {
     * ascending; Inclusive otherwise
     */
     /* Prevent negative step */
-    if (step < 0) {
+    if (step <= 0) {
         print_error("Step size must be positive; To reverse, change the bounds.");
         char *s = (char *) malloc(sizeof(char));
         if (s != NULL) {
@@ -829,6 +839,9 @@ char * substring(char *str, int b1, int b2, int step) {
 
 void yyerror(char *s) {
     fprintf(stderr, "Line %d: %s\n", yylineno, s);
+    yyin = fdopen(pipes[0], "r");
+    yyrestart(yyin);
+    yyparse();
 }
 
 int main(int argc, char*argv[]) {
@@ -847,8 +860,6 @@ int main(int argc, char*argv[]) {
     }
     else {
         while(keep_alive) {
-            int pipes[2];
-            int history_pipes[2];
             if (pipe(pipes) < 0) {
                 print_error("Could not open pipe for REPL.");
                 exit(1);

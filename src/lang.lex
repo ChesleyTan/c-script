@@ -246,7 +246,7 @@ WHITESPACE          [ \t]
             print_debug("Found string array element '%s'", buf);
         }
         #endif
-        if (buf_pushed == 0) {
+        if (buf_pushed == 0 && str_buf_index != 0) {
             char *s = strdup(buf);
             str_buf[str_buf_index++] = s;
             buf_pushed = 1;
@@ -276,7 +276,7 @@ WHITESPACE          [ \t]
             print_debug("Found string array element '%s'", buf);
         }
         #endif
-        if (buf_pushed == 0) {
+        if (buf_pushed == 0 && str_buf_index != 0) {
             char *s = strdup(buf);
             str_buf[str_buf_index++] = s;
             buf_pushed = 1;
